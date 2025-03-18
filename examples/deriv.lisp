@@ -63,11 +63,7 @@
 (define (variable? x) (symbol? x))
 
 (define (same-variable? x y)
-    (and
-        (variable? x)
-        (variable? y)
-        (eq? x y)
-    )
+    (and (variable? x) (variable? y) (eq? x y))
 )
 
 (define (zero? x)
@@ -103,6 +99,7 @@
         (eq? (car x) '+)
     )
 )
+
 (define (addend x) (cadr x))
 (define (augend x) (caddr x))
 
@@ -115,6 +112,5 @@
 (define (multiplier x) (cadr x))
 (define (multiplicand x) (caddr x))
 
-(deriv '(+ x 3) 'x)
-(deriv '(* x y) 'x)
 (deriv '(* (* x y) (+ x 3)) 'x)
+(timeit (lambda (_) (deriv '(* (* x y) (+ x 3)) 'x)) 1000)

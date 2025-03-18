@@ -108,6 +108,7 @@ def op_and_setup(ctx, args):
 
 def k_op_and_next(ctx):
     args, ctx.s = ctx.s
+    ctx.env = ctx.s[0]
     if ctx.val is EL:
         ctx.env, s = ctx.s
         ctx.cont, ctx.s = s
@@ -312,6 +313,7 @@ def op_or_setup(ctx, args):
 
 def k_op_or_next(ctx):
     args, ctx.s = ctx.s
+    ctx.env = ctx.s[0]
     if ctx.val is EL:
         return op_or_setup(ctx, args)
     ctx.env, s = ctx.s
