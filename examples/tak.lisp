@@ -78,4 +78,47 @@
 (timeit (lambda (_) (print (ltak 12l 6l 2l))) 1)
 (timeit (lambda (_) (print (ltak 18l 12l 6l))) 1)
 
+
+;; from https://www.dreamsongs.com/Files/Timrep.pdf
+
+;;; Here are the definitions of TAKF as provided by GJC.
+;;; #-NIL means except in NIL, #+NIL means for NIL.
+(define (takf x y z) (takfsub takfsub x y z))
+
+(define (takfsub f x y z)
+    (if (< y x)
+        (f f (f f (1- x) y z)
+             (f f (1- y) z x)
+             (f f (1- z) x y))
+        z))
+
+;; 36.8 sec
+(timeit (lambda (_) (print (takf 18 12 6))) 1)
+
+
+;; from https://www.dreamsongs.com/Files/Timrep.pdf
+
+(define (stak x y z) (stak-aux))
+
+(special (stak-aux)
+    (if (< y x)
+        (let ((x (let ((x (1- x))
+                       (y y)
+                       (z z))
+                       (stak-aux)))
+              (y (let ((x (1- y))
+                       (y z)
+                       (z x))
+                       (stak-aux)))
+              (z (let ((x (1- z))
+                       (y x)
+                       (z y))
+                       (stak-aux))))
+            (stak-aux))
+        z))
+
+;; 34.4 sec
+(timeit (lambda (_) (print (stak 18 12 6))) 1)
+
+
 ;; EOF
