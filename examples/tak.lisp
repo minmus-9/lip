@@ -81,8 +81,6 @@
 
 ;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
-;;; Here are the definitions of TAKF as provided by GJC.
-;;; #-NIL means except in NIL, #+NIL means for NIL.
 (define (takf x y z) (takfsub takfsub x y z))
 
 (define (takfsub f x y z)
