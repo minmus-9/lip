@@ -135,6 +135,11 @@
 )
 
 ;; }}}
+;; {{{ not
+
+(define (not x) (if x () #t))
+
+;; }}}
 ;; {{{ reverse
 
 (define (reverse l)

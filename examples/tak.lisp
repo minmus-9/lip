@@ -8,6 +8,8 @@
            (tak (- z 1) x y))
       z))
 
+(timeit (lambda (_) (print (tak 18 12 6))) 1)
+
 ;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/cpstak.scm
 ;;; CPSTAK -- A continuation-passing version of the TAK benchmark.
 ;;; A good test of first class procedures and tail recursion.
@@ -32,10 +34,9 @@
 
   (tak x y z (lambda (a) a)))
 
-(timeit (lambda (_) (print (tak 18 12 6))) 1)
 (timeit (lambda (_) (print (cpstak 18 12 6))) 1)
 
-;; from 
+;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
 (define = equal?)
 (define (1- x) (- x 1))
@@ -59,6 +60,7 @@
 (define (ltak x y z)
     (car (mas x y z)))
 
+;; 5.7 sec
 (define (shorterp x y)
     (if
         y
@@ -68,12 +70,7 @@
             (shorterp (cdr x) (cdr y)))
         ()))
 
-(print (or  () () 3))
-(print (or  () () ()))
-(print (and 1 2 3))
-(print (and 1 2 ()))
-
-;; 5.9 sec vs 5.7 sec without this impl:
+;; 5.9 sec
 (define (shorterp x y)
     (and y (or (null? x) (shorterp (cdr x) (cdr y)))))
 
