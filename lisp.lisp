@@ -124,51 +124,6 @@
 (define (<= x y) (not (< y x)))
 
 ;; }}}
-;; {{{ and or not
-
-(special (and & __special_and_args__)
-    (eval (and$ __special_and_args__) 1))
-
-(define (and$ __special_and_args__)
-    (if
-        (null? __special_and_args__)
-        ()
-        `(begin
-            (define __special_and_v__ ,(car __special_and_args__))
-            (if
-                (null? ',(cdr __special_and_args__))
-                __special_and_v__
-                (if
-                    __special_and_v__
-                    ,(and$ (cdr __special_and_args__))
-                    ()
-                )
-            )
-        )
-    )
-)
-
-(special (or & __special_or_args__)
-    (eval (or$ __special_or_args__) 1))
-
-(define (or$ __special_or_args__)
-    (if
-        (null? __special_or_args__)
-        ()
-        `(begin
-            (define __special_or_v__ ,(car __special_or_args__))
-            (if
-                __special_or_v__
-                __special_or_v__
-                ,(or$ (cdr __special_or_args__))
-            )
-        )
-    )
-)
-
-(define not null?)
-
-;; }}}
 ;; {{{ assert
 
 (special (assert __special_assert_sexpr__)

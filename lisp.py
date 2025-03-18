@@ -84,6 +84,37 @@ def binary(ctx, f):
 ## {{{ special forms
 
 
+@spcl("and")
+def op_and(ctx):
+    args = ctx.argl
+    if args is EL:
+        ctx.val = EL
+        return ctx.cont
+    ctx.s = [ctx.env, [ctx.cont, ctx.s]]
+    return op_and_setup(ctx, args)
+
+def op_and_setup(ctx, args):
+    try:
+        ctx.exp, args = args
+    except TypeError:
+        raise SyntaxError("expected a list") from None
+    if args is EL:
+        ctx.env, s = ctx.s
+        ctx.cont, ctx.s = s
+        return k_leval
+    ctx.s = [args, ctx.s]
+    ctx.cont = k_op_and_next
+    return k_leval
+
+def k_op_and_next(ctx):
+    args, ctx.s = ctx.s
+    if ctx.val is EL:
+        ctx.env, s = ctx.s
+        ctx.cont, ctx.s = s
+        return ctx.cont
+    return op_and_setup(ctx, args)
+
+
 @spcl("begin")
 def op_begin(ctx):
     args = ctx.argl
@@ -254,6 +285,37 @@ def op_lambda(ctx):
     else:
         body = cons(ctx.symbol("begin"), body)
     ctx.val = create_lambda(params, body, ctx.env)
+    return ctx.cont
+
+
+@spcl("or")
+def op_or(ctx):
+    args = ctx.argl
+    if args is EL:
+        ctx.val = EL
+        return ctx.cont
+    ctx.s = [ctx.env, [ctx.cont, ctx.s]]
+    return op_or_setup(ctx, args)
+
+def op_or_setup(ctx, args):
+    try:
+        ctx.exp, args = args
+    except TypeError:
+        raise SyntaxError("expected a list") from None
+    if args is EL:
+        ctx.env, s = ctx.s
+        ctx.cont, ctx.s = s
+        return k_leval
+    ctx.s = [args, ctx.s]
+    ctx.cont = k_op_or_next
+    return k_leval
+
+def k_op_or_next(ctx):
+    args, ctx.s = ctx.s
+    if ctx.val is EL:
+        return op_or_setup(ctx, args)
+    ctx.env, s = ctx.s
+    ctx.cont, ctx.s = s
     return ctx.cont
 
 
@@ -555,11 +617,16 @@ def op_error(ctx):
 
 @glbl("eval")
 def op_eval(ctx):
+    y = SENTINEL
     try:
-        x = ctx.unpack1()
-        n_up = 0
-    except SyntaxError:
-        x, n_up = ctx.unpack2()
+        x, a = ctx.argl
+        if a is not EL:
+            y, a = a
+            if a is not EL:
+                raise TypeError()
+    except TypeError:
+        raise SyntaxError("expected one or two args") from None
+    n_up = 0 if y is SENTINEL else y
     if x.__class__ is str:
         l = []
         parse(ctx, x, l.append)
