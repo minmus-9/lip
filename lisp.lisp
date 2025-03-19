@@ -135,9 +135,9 @@
 ;; {{{ length
 
 (define (length lst)
-    (define (liter l i)
-        (if (null? l) i (liter (cdr l) (- i -1))))
-    (liter lst 0)
+    (define (iter l i)
+        (if (null? l) i (iter (cdr l) (- i -1))))
+    (iter lst 0)
 )
 
 ;; }}}
@@ -280,14 +280,11 @@
         (if
             (null? args)
             (error "not enough args")
-            ()
-        )
-        (if
-            (null? (cdr args))
-            (car args)
-            (error "too many args")
-        )
-    )
+            (if
+                (null? (cdr args))
+                (car args)
+                (error "too many args")
+            )))
     (define head ())
     (define tail ())
     (define node ())
@@ -346,6 +343,7 @@
             ((eq? m 'get) (unpack0 args) head)
             ((eq? m 'depth) (unpack0 args) (length head))
             ((eq? m 'append) (append (unpack1 args)))
+            ((eq? m 'last) (car tail))
         )
     )
     dispatch
