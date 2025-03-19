@@ -811,7 +811,11 @@ def module_ffi(args, module):
     func = getattr(module, str(sym), SENTINEL)
     if func is SENTINEL:
         raise ValueError(f"function {sym!r} does not exist")
-    return func(*args)
+    if callable(func):
+        return func(*args)
+    if args:
+        raise TypeError("not a callable object")
+    return func
 
 
 @ffi("math")
