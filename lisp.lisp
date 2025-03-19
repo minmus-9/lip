@@ -29,40 +29,18 @@
 (define (list & args) args)
 
 ;; ditto
+(define (caar l) (car (car l)))
+(define (caaar l) (car (car (car l))))
+(define (caaaar l) (caar (caar l)))
+
+(define (cddr l) (cdr (cdr l)))
+(define (cdddr l) (cdr (cdr (cdr l))))
+(define (cddddr l) (cddr (cddr l)))
+
 (define (cadr l) (car (cdr l)))
-(define (caddr l) (car (cdr (cdr l))))
-(define (cadddr l) (car (cdr (cdr (cdr l)))))
-(define (caddddr l) (car (cdr (cdr (cdr (cdr l))))))
-
-;; }}}
-;; {{{ foreach
-;; call f for each element of lst, returns ()
-
-(define (foreach f lst)
-    (if
-        (null? lst)
-        ()
-        (begin
-            (f (car lst))
-            (foreach f (cdr lst))
-        )
-    )
-)
-
-;; }}}
-;; {{{ last
-
-(define (last lst)
-    (if
-        (null? lst)
-        ()
-        (if
-            (null? (cdr lst))
-            (car lst)
-            (last (cdr lst))
-        )
-    )
-)
+(define (caddr l) (car (cddr l)))
+(define (cadddr l) (car (cdddr l)))
+(define (caddddr l) (car (cddddr l)))
 
 ;; }}}
 ;; {{{ bitwise ops
@@ -196,10 +174,7 @@
                 (set-cdr! tail (cons (f (car lst)) ()))
                 (set! tail (cdr tail))
                 ;; rinse, repeat
-                (map1$ (cdr lst))
-            )
-        )
-    )
+                (map1$ (cdr lst)))))
     (if
         (null? lst)
         ()
@@ -207,10 +182,7 @@
             ;; enqueue the first item here to avoid main loop test
             (set! ret (cons (f (car lst)) ()))
             (set! tail ret)
-            (map1$ (cdr lst))
-        )
-    )
-)
+            (map1$ (cdr lst)))))
 
 ;; map 2 funcs over a lst of 2-lists (x y); for example, a list of (let) vdefs
 ;; returns
@@ -233,10 +205,7 @@
                 (set-cdr! tcdr (cons (fcdr xy) ()))
                 (set! tcdr (cdr tcdr))
                 ;; rinse, repeat
-                (map2$ (cdr lst))
-            )
-        )
-    )
+                (map2$ (cdr lst)))))
     (if
         (null? lst)
         ()
@@ -247,10 +216,7 @@
             (set! tcar rcar)
             (set! rcdr (cons (fcdr xy) ()))
             (set! tcdr rcdr)
-            (map2$ (cdr lst))
-        )
-    )
-)
+            (map2$ (cdr lst)))))
 
 (define (accumulate-n f initial sequences)
     (define r ())
@@ -475,8 +441,9 @@
         (letrec$2 decls body)))
 
 (define (letrec$2 decls body)
-    (define names (map1 car decls))
-    (define values (map1 cadr decls))
+    (define xy (map-2-list car cadr decls))
+    (define names (car xy))
+    (define values (cdr xy))
     (define (declare var) `(define ,var ()))
     (define (initialize var-value) `(set! ,(car var-value) ,(cadr var-value)))
     (define (declare-all) (map1 declare names))
@@ -485,8 +452,9 @@
 )
 
 (define (letrec$3 sym decls body)
-    (define names (map1 car decls))
-    (define values (map1 cadr decls))
+    (define xy (map-2-list car cadr decls))
+    (define names (car xy))
+    (define values (cdr xy))
     (define (declare var) `(define ,var ()))
     (define (initialize var-value) `(set! ,(car var-value) ,(cadr var-value)))
     (define (declare-all) (map1 declare names))
@@ -585,7 +553,20 @@
 )
 
 ;; }}}
-;; {{{ looping: loop, loop-with-break, for, while
+;; {{{ last
+
+(define (last lst)
+    (if
+        (null? lst)
+        ()
+        (let loop ((first (car lst)) (rest (cdr lst)))
+            (if
+                (null? rest)
+                first
+                (loop (car rest) (cdr rest))))))
+
+;; }}}
+;; {{{ loop, loop-with-break, for, while, foreach
 
 ;; call f in a loop forever
 (define (loop f) (f) (loop f))
@@ -624,6 +605,15 @@
         (for$ f start)
     )
 )
+
+(define (foreach f lst)
+    (define (loop f _ lst)
+        (if
+            (null? lst)
+            ()
+            (loop f (f (car lst)) (cdr lst))
+        ))
+    (loop f () lst))
 
 
 ;; }}}
