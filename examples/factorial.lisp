@@ -23,7 +23,7 @@
     (if
         (< n 2)
         1
-        (* n (!2 (- n 1)))
+        (* n (!1 (- n 1)))
     )
 )
 
@@ -274,6 +274,13 @@
     n!
 )
 
+(define (!21 n)
+    (let loop ((n n) (r 1))
+        (if
+            (< n 2)
+            r
+            (loop (- n 1) (* r n)))))
+
 (define (!bench)
     (define reps 5)
     (define n 400)
@@ -298,5 +305,6 @@
     (print '!18 (timeit (lambda (_) (!18 n)) reps))
     (print '!19 (timeit (lambda (_) (!19 n)) reps))
     (print '!20 (timeit (lambda (_) (!20 n)) reps))
+    (print '!21 (timeit (lambda (_) (!21 n)) reps))
 )
 (timeit (lambda (_) (!bench)) 1)

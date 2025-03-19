@@ -437,14 +437,12 @@ def qq_(ctx):
         ctx.argl = form[1]
         return op_quasiquote
     if eq(app, ctx.symbol("unquote")):
-        ctx.argl = form
-        _, ctx.exp = ctx.unpack2()
+        ctx.exp = form[1][0]
         return k_leval
     if eq(app, ctx.symbol("unquote-splicing")):
         _, __ = ctx.unpack2()
         raise SyntaxError("cannot use unquote-splicing here")
-    ctx.push_ce()
-    ctx.push(SENTINEL)
+    ctx.s = [SENTINEL, [ctx.env, [ctx.cont, ctx.s]]]
     return k_qq_setup(ctx, form)
 
 
@@ -452,11 +450,9 @@ def k_qq_setup(ctx, form):
     elt, form = form
     if not (form.__class__ is list or form is EL):
         raise TypeError(f"expected list, got {form!r}")
-    ctx.push(form)
-    ctx.push_ce()
+    ctx.s = [ctx.env, [ctx.cont, [form, ctx.s]]]
     if elt.__class__ is list and elt[0] is ctx.symbol("unquote-splicing"):
-        ctx.argl = elt
-        _, ctx.exp = ctx.unpack2()
+        ctx.exp = elt[1][0]
         ctx.cont = k_qq_spliced
         return k_leval
     ctx.cont = k_qq_next
@@ -465,10 +461,12 @@ def k_qq_setup(ctx, form):
 
 
 def k_qq_spliced(ctx):
-    ctx.pop_ce()
-    form = ctx.pop()
+    ctx.env, s = ctx.s
+    ctx.cont, s = s
+    form, s = s
     value = ctx.val
     if value is EL:
+        ctx.s = s
         if form is EL:
             return k_qq_finish
         return k_qq_setup(ctx, form)
@@ -478,17 +476,17 @@ def k_qq_spliced(ctx):
         elt, value = value
         if value is EL:
             ctx.val = elt
-            ctx.push(form)
-            ctx.push_ce()
+            ctx.s = [ctx.env, [ctx.cont, [form, s]]]
             return k_qq_next
-        ctx.push(elt)
+        s = [elt, s]
     raise RuntimeError("bugs in the taters")
 
 
 def k_qq_next(ctx):
-    ctx.pop_ce()
-    form = ctx.pop()
-    ctx.push(ctx.val)
+    ctx.env, s = ctx.s
+    ctx.cont, s = s
+    form, s = s
+    ctx.s = [ctx.val, s]
     if form is EL:
         return k_qq_finish
     return k_qq_setup(ctx, form)
@@ -496,12 +494,14 @@ def k_qq_next(ctx):
 
 def k_qq_finish(ctx):
     ret = EL
+    s = ctx.s
     while True:
-        x = ctx.pop()
+        x, s = s
         if x is SENTINEL:
             break
         ret = [x, ret]
-    ctx.pop_ce()
+    ctx.env, s = s
+    ctx.cont, ctx.s = s
     ctx.val = ret
     return ctx.cont
 

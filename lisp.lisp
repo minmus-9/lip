@@ -212,6 +212,46 @@
     )
 )
 
+;; map 2 funcs over a lst of 2-lists (x y); for example, a list of (let) vdefs
+;; returns
+;;      (cons (map1 car lst) (map1 cadr lst))
+;; but faster
+(define (map-2-list fcar fcdr lst)
+    (define rcar ())
+    (define tcar ())
+    (define rcdr ())
+    (define tcdr ())
+    (define (map2$ lst)
+        (if
+            (null? lst)
+            (cons rcar rcdr)
+            (begin
+                (define xy (car lst))
+                ;; link in the new values
+                (set-cdr! tcar (cons (fcar xy) ()))
+                (set! tcar (cdr tcar))
+                (set-cdr! tcdr (cons (fcdr xy) ()))
+                (set! tcdr (cdr tcdr))
+                ;; rinse, repeat
+                (map2$ (cdr lst))
+            )
+        )
+    )
+    (if
+        (null? lst)
+        ()
+        (begin
+            ;; enqueue the first item here to avoid main loop test
+            (define xy (car lst))
+            (set! rcar (cons (fcar xy) ()))
+            (set! tcar rcar)
+            (set! rcdr (cons (fcdr xy) ()))
+            (set! tcdr rcdr)
+            (map2$ (cdr lst))
+        )
+    )
+)
+
 (define (accumulate-n f initial sequences)
     (define r ())
     (define c (call/cc))
@@ -376,33 +416,18 @@
     (if
         (eq? (type vdefs) 'symbol)
         (let$3 vdefs (car body) (cdr body))
-        (let$2 vdefs body)))
-
-(define (let$2 vdefs body)
-        (if
-            (null? vdefs)
-            (if (null? (cdr body)) (car body) (cons 'begin body))
-            (begin
-                (define vdecls (transpose vdefs))
-                (define vars (car vdecls))
-                (define vals (cadr vdecls))
-                `((lambda (,@vars) ,@body) ,@vals)
-            )))
+        (let$3    ()     vdefs       body)))
 
 (define (let$3 sym vdefs body)
-    (define vars ())
-    (define vals ())
-    (cond
-        ((not (null? vdefs))
-            (define vdecls (transpose vdefs))
-            (set! vars (car vdecls))
-            (set! vals (cadr vdecls))
-        )
-    )
-    `((lambda ()
-        (define (,sym ,@vars) ,@body)
-        (,sym ,@vals)))
-)
+    (define xy (map-2-list car cadr vdefs))
+    (define vars (car xy))
+    (define vals (cdr xy))
+    (if
+        sym
+        `(begin
+            (define (,sym ,@vars) ,@body)
+            (,sym ,@vals))
+        `((lambda (,@vars) ,@body) ,@vals)))
 
 ;; }}}
 ;; {{{ let*
