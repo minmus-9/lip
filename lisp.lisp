@@ -470,20 +470,27 @@
     (define items ())
     (define (dispatch m & args)
         (cond
-            ((eq? m 'known) (not (null? (table$find items key compare))))
+            ((eq? m 'get) (table$find items (car args) compare))
+            ((eq? m 'set)
+                (define key (car args))
+                (define value (cdr args))
+                (define node (table$find items key compare))
+                (if
+                    (null? node)
+                    (set! items (cons (cons key (cons value ())) items))
+                    (set-car! (cdr node) value)))
             ((eq? m 'del) (set! items (table$delete items (car args) compare)))
-            ((eq? m 'get) (begin
-                (let* (
-                    (key (car args))
-                    (node (table$find items key compare)))
-                    (if
-                        (null? node)
-                        ()
-                        (cadr node)
-                    )
-                )
-            ))
-            ((eq? m 'iter) (begin
+            ((eq? m 'known) (table$find items (car args) compare))
+            ((eq? m 'setdefault)
+                (define key (car args))
+                (define value (cadr args))
+                (define node (table$find items key compare))
+                (if
+                    (null? node)
+                    (set! items (cons (cons key (cons value ())) items))
+                    (set-cdr! node value)))
+            ((eq? m 'empty?) (null? items))
+            ((eq? m 'iter)
                 (let ((lst items))
                     (lambda ()
                         (if
@@ -492,63 +499,36 @@
                             (begin
                                 (define ret (car lst))
                                 (set! lst (cdr lst))
-                                ret
-                            )
-                        )
-                    )
-                )
-            ))
+                                ret)))))
             ((eq? m 'len) (length items))
             ((eq? m 'raw) items)
-            ((eq? m 'set) (begin
-                (let* (
-                    (key (car args))
-                    (value (cadr args))
-                    (node (table$find items key compare)))
-                    (if
-                        (null? node)
-                        (begin
-                            (let* (
-                                (node (cons key (cons value ()))))
-                                (set! items (cons node items)))
-                        )
-                        (set-car! (cdr node) value)
-                    )
-                )
-            ))
-            (#t (error "unknown method"))
-        )
-    )
+            (#t (error "unknown method"))))
     dispatch
 )
 
 (define (table$find items key compare)
-    (cond
-      ((null? items) ())
-      ((compare (car (car items)) key) (car items))
-      (#t (table$find (cdr items) key compare))
-    )
-)
+    (if
+      (null? items)
+      ()
+      (if
+          (compare (car (car items)) key)
+          (car items)
+          (table$find (cdr items) key compare))))
 
 (define (table$delete items key compare)
     (define prev ())
-    (define (helper assoc key)
-        (cond
-            ((null? assoc) items)
-            ((compare (car (car assoc)) key) (begin
-                (cond
-                    ((null? prev) (cdr assoc))
-                    (#t (begin (set-cdr! prev (cdr assoc)) items))
-                )
-            ))
-            (#t (begin
-                (set! prev assoc)
-                (helper (cdr assoc) key)
-            ))
-        )
-    )
-    (helper items key)
-)
+    (define (helper assoc)
+        (if
+            (null? assoc)
+            items
+            (if
+                (compare (car (car assoc)) key)
+                (if
+                    (null? prev)
+                    (cdr assoc)
+                    (begin (set-cdr! prev (cdr assoc)) items))
+                (begin (set! prev assoc) (helper (cdr assoc))))))
+    (helper items))
 
 ;; }}}
 ;; {{{ last
