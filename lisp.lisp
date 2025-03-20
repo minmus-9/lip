@@ -380,18 +380,17 @@
     (if
         (eq? (type vdefs) 'symbol)
         (let$3 vdefs (car body) (cdr body))
-        (let$3    ()     vdefs       body)))
+        (let$2 vdefs body)))
+
+(define (let$2 vdefs body)
+    (define xy (map-2-list car cadr vdefs))
+    `((lambda (,@(car xy)) ,@body) ,@(cdr xy)))
 
 (define (let$3 sym vdefs body)
     (define xy (map-2-list car cadr vdefs))
-    (define vars (car xy))
-    (define vals (cdr xy))
-    (if
-        sym
-        `(begin
-            (define (,sym ,@vars) ,@body)
-            (,sym ,@vals))
-        `((lambda (,@vars) ,@body) ,@vals)))
+    `(begin
+        (define (,sym ,@(car xy)) ,@body)
+        (,sym ,@(cdr xy))))
 
 ;; }}}
 ;; {{{ let*
@@ -411,16 +410,14 @@
         (if (null? (cdr body)) (car body) (cons 'begin body))
         (begin
             (define kv (car vdefs))
-            (define k (car kv))
-            (define v (cadr kv))
-          `((lambda (,k) ,(let*$2 (cdr vdefs) body)) ,v))))
+          `((lambda (,(car kv)) ,(let*$2 (cdr vdefs) body)) ,(cadr kv)))))
 
 (define (let*$3 sym vdefs body)
     (define (inner vdefs)
         (if
             (null? vdefs)
             (if (null? (cdr body)) (car body) (cons 'begin body))
-            `((lambda (,(car (car vdefs))) ,(inner (cdr vdefs))) ,(car (car vdefs)))))
+            `((lambda (,(caar vdefs)) ,(inner (cdr vdefs))) ,(caar vdefs))))
     `((lambda ()
         (define (,sym ,@(map1 car vdefs)) ,(inner vdefs))
         (,sym ,@(map1 cadr vdefs)))))
@@ -429,39 +426,27 @@
 ;; {{{ letrec
 ;; i saw this (define x ()) ... (set! x value) on stackoverflow somewhere
 
-(special (letrec __special_letrec_decls__ & __special_letrec_body__)
-    (eval (letrec$ __special_letrec_decls__ __special_letrec_body__) 1))
+(special (letrec __special_letrec_vdefs__ & __special_letrec_body__)
+    (eval (letrec$ __special_letrec_vdefs__ __special_letrec_body__) 1))
 
-(define (letrec$ decls body)
+(define (letrec$ vdefs body)
     (if
-        (eq? (type decls) 'symbol)
-        (letrec$3 decls (car body) (cdr body))
-        (letrec$2 decls body)))
+        (eq? (type vdefs) 'symbol)
+        (letrec$3 vdefs (car body) (cdr body))
+        (letrec$2 vdefs body)))
 
-(define (letrec$2 decls body)
-    (define xy (map-2-list car cadr decls))
-    (define names (car xy))
-    (define values (cdr xy))
-    (define (declare var) `(define ,var ()))
-    (define (initialize var-value) `(set! ,(car var-value) ,(cadr var-value)))
-    (define (declare-all) (map1 declare names))
-    (define (initialize-all) (map1 initialize decls))
-    `((lambda () ,@(declare-all) ,@(initialize-all) ,@body))
-)
-
-(define (letrec$3 sym decls body)
-    (define xy (map-2-list car cadr decls))
-    (define names (car xy))
-    (define values (cdr xy))
-    (define (declare var) `(define ,var ()))
-    (define (initialize var-value) `(set! ,(car var-value) ,(cadr var-value)))
-    (define (declare-all) (map1 declare names))
-    (define (initialize-all) (map1 initialize decls))
+(define (letrec$2 vdefs body)
     `((lambda ()
-        ,@(declare-all)
-        ,@(initialize-all)
-        (define (,sym ,@names) ,@body)
-        (,sym ,@values))))
+        ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
+        ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
+        ,@body)))
+
+(define (letrec$3 sym vdefs body)
+    `((lambda ()
+        ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
+        ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
+        (define (,sym ,@(map1 car vdefs)) ,@body)
+        (,sym ,@(map1 cadr vdefs)))))
 
 ;; }}}
 ;; {{{ associative table
