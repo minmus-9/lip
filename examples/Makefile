@@ -19,5 +19,5 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 all:
-	for i in *.lisp; do ../lisp.py $$i; done
+	for i in *.lisp; do ../lisp.py $$i || break; done
 
