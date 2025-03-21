@@ -64,58 +64,48 @@
     (if
         (< x 0)
         (- x)
-        x
-    )
-)
+        x))
 
 ;; copysign
 (define (copysign x y)
     (if
         (< y 0)
         (- (abs x))
-        (abs x)
-    )
-)
+        (abs x)))
 
 ;; unsigned shifts
 (define (lshift x n)
     (if
         (equal? n 0)
         x
-        (lshift (+ x x) (- n 1))
-    )
-)
+        (lshift (+ x x) (- n 1))))
 
 (define (rshift x n)
     (if
         (equal? n 0)
         x
-        (rshift (/ x 2) (- n 1))
-    )
-)
+        (rshift (/ x 2) (- n 1))))
+
+;; }}}
+;; {{{ not
+
+(define (not x) (if x () #t))
 
 ;; }}}
 ;; {{{ comparison predicates
 
-(define (>= x y) (not (< x y)))
+(define (>= x y) (if (< x y) () #t))
 (define (>  x y) (< y x))
-(define (<= x y) (not (< y x)))
+(define (<= x y) (if (< y x) () #t))
 
 ;; }}}
 ;; {{{ assert
 
 (special (assert __special_assert_sexpr__)
     (if
-        (eval __special_assert_sexpr__)
+        (eval __special_assert_sexpr__ 1)
         ()
-        (error (obj>string __special_assert_sexpr__))
-    )
-)
-
-;; }}}
-;; {{{ not
-
-(define (not x) (if x () #t))
+        (error (obj>string __special_assert_sexpr__))))
 
 ;; }}}
 ;; {{{ reverse
@@ -125,20 +115,19 @@
         (if
             (null? x)
             y
-            (rev (cdr x) (cons (car x) y))
-        )
-    )
-    (rev l ())
-)
+            (rev (cdr x) (cons (car x) y))))
+    (rev l ()))
 
 ;; }}}
 ;; {{{ length
 
 (define (length lst)
     (define (iter l i)
-        (if (null? l) i (iter (cdr l) (- i -1))))
-    (iter lst 0)
-)
+        (if
+            (null? l)
+            i
+            (iter (cdr l) (- i -1))))
+    (iter lst 0))
 
 ;; }}}
 ;; {{{ fold, transpose, map
@@ -147,9 +136,7 @@
     (if 
         (null? sequence)
         x
-        (fold-left f (f (car sequence) x) (cdr sequence))
-    )
-)
+        (fold-left f (f (car sequence) x) (cdr sequence))))
 
 (define reduce fold-left)  ;; python nomenclature
 
@@ -227,10 +214,7 @@
         (begin
             (set! r (cons (accumulate f initial (map1 car sequences)) r))
             (set! sequences (map1 cdr sequences))
-            (c c)
-        )
-    )
-)
+            (c c))))
 
 (define (ftranspose f lists)
     (define ret ())  ;; head of queue and return value
@@ -244,10 +228,7 @@
                 (set-cdr! tail (cons (f (map1 car lists)) ()))
                 (set! tail (cdr tail))
                 ;; rinse, repeat
-                (t1 (map1 cdr lists))
-            )
-        )
-    )
+                (t1 (map1 cdr lists)))))
     (if
         (null? lists)
         ()
@@ -258,11 +239,7 @@
                 ;; enqueue the first item here to avoid main loop test
                 (set! ret (cons (f (map1 car lists)) ()))
                 (set! tail ret)
-                (t1 (map1 cdr lists))
-            )
-        )
-    )
-)
+                (t1 (map1 cdr lists))))))
 
 (define (transpose lists)
     (ftranspose (lambda (x) x) lists))
@@ -283,8 +260,7 @@
             (if
                 (null? (cdr args))
                 (car args)
-                (error "too many args")
-            )))
+                (error "too many args"))))
     (define head ())
     (define tail ())
     (define node ())
@@ -295,8 +271,7 @@
             (set! head node)
             (set-cdr! tail node)
         )
-        (set! tail node)
-    )
+        (set! tail node))
     (define (e lst)
         (if
             (null? lst)
@@ -304,20 +279,14 @@
             (begin
                 (set-cdr! tail (cons (car lst) ()))
                 (set! tail (cdr tail))
-                (e (cdr lst))
-            )
-        )
-    )
+                (e (cdr lst)))))
     (define (extend lst)
         (if
             (null? lst)
             ()
             (begin
                 (enqueue (car lst))
-                (e (cdr lst))
-            )
-        )
-    )
+                (e (cdr lst)))))
     (define (dequeue)
         (define n head)
         (set! head (cdr n))
@@ -343,11 +312,8 @@
             ((eq? m 'get) (unpack0 args) head)
             ((eq? m 'depth) (unpack0 args) (length head))
             ((eq? m 'append) (append (unpack1 args)))
-            ((eq? m 'last) (car tail))
-        )
-    )
-    dispatch
-)
+            ((eq? m 'last) (car tail))))
+    dispatch)
 
 ;; }}}
 ;; {{{ join
@@ -363,10 +329,7 @@
             )
             (begin
                 (q 'extend x)
-                (j (car lists) (cdr lists))
-            )
-        )
-    )
+                (j (car lists) (cdr lists)))))
     (if (null? lists) x (j x lists))
 )
 
@@ -453,6 +416,28 @@
 
 (define (table compare)
     (define items ())
+    (define (table$find items key compare)
+        (if
+          (null? items)
+          ()
+          (if
+              (compare (car (car items)) key)
+              (table$find (cdr items) key compare)
+              (car items))))
+    (define (table$delete items key compare)
+        (define prev ())
+        (define (helper assoc)
+            (if
+                (null? assoc)
+                items
+                (if
+                    (compare (car (car assoc)) key)
+                    (begin (set! prev assoc) (helper (cdr assoc)))
+                    (if
+                        (null? prev)
+                        (cdr assoc)
+                        (begin (set-cdr! prev (cdr assoc)) items)))))
+        (helper items))
     (define (dispatch m & args)
         (cond
             ((eq? m 'get) (table$find items (car args) compare))
@@ -490,32 +475,7 @@
             ((eq? m 'len) (length items))
             ((eq? m 'raw) items)
             (#t (error "unknown method"))))
-    dispatch
-)
-
-(define (table$find items key compare)
-    (if
-      (null? items)
-      ()
-      (if
-          (compare (car (car items)) key)
-          (table$find (cdr items) key compare)
-          (car items))))
-
-(define (table$delete items key compare)
-    (define prev ())
-    (define (helper assoc)
-        (if
-            (null? assoc)
-            items
-            (if
-                (compare (car (car assoc)) key)
-                (begin (set! prev assoc) (helper (cdr assoc)))
-                (if
-                    (null? prev)
-                    (cdr assoc)
-                    (begin (set-cdr! prev (cdr assoc)) items)))))
-    (helper items))
+    dispatch)
 
 ;; }}}
 ;; {{{ last
@@ -523,7 +483,7 @@
 (define (last lst)
     (if
         (null? lst)
-        ()
+        (error "(last) needs a nonempty list")
         (let loop ((first (car lst)) (rest (cdr lst)))
             (if
                 (null? rest)
@@ -546,30 +506,53 @@
             (f break)
             (c2 c2)
         )
-        ()
-    )
-)
+        ()))
 
 (define (while f) (if (f) (while f) ()))
 
 ;; call f a given number of times as (f counter)
 (define (for f start stop step)
-    (define (for$ f start)
+    (define op <)
+    (define (for$ start)
         (if
-            (< start stop)
+            (op start stop)
             (begin
                 (f start)
-                (for$ f (- start (- 0 step)))
-            )
-            ()
-        )
-    )
-    (if
-        (< step 1)
-        (error "step must be positive")
-        (for$ f start)
-    )
-)
+                (for$ (- start (- step))))))
+    (cond
+        ((equal? start stop) ())
+        ((< 0 step)
+            (if
+                (< stop start)
+                (error "bad step")))
+        ((< step 0)
+            (if
+                (< start stop)
+                (error "bad step")
+                (set! op >)))
+        (#t (error "step must be nonzero")))
+    (for$ start))
+
+(define (for f start stop step)
+    (define op <)
+    (define (for$ start)
+        (if
+            (op start stop)
+            (begin
+                (f start)
+                (for$ (- start (- step))))))
+    (cond
+        ((< 0 step)
+            (if
+                (< stop start)
+                (error "bad step")))
+        ((< step 0)
+            (if
+                (< start stop)
+                (error "bad step")
+                (set! op >)))
+        (#t (error "step must be nonzero")))
+    (for$ start))
 
 (define (foreach f lst)
     (define (loop f _ lst)
@@ -579,7 +562,6 @@
             (loop f (f (car lst)) (cdr lst))
         ))
     (loop f () lst))
-
 
 ;; }}}
 ;; {{{ iterate (compose with itself) a function
@@ -600,8 +582,7 @@
     (define dt (- t1 t0))
     (if (< dt 1e-7) (set! dt 1e-7) ())
     (if (< n 1) (set! n 1) ())
-    (list n dt (* 1e6 (/ dt n)) (/ n dt))
-)
+    (list n dt (* 1e6 (/ dt n)) (/ n dt)))
 
 ;; }}}
 ;; {{{ gcd
@@ -611,15 +592,11 @@
         (if
             (equal? y 0)
             x
-            (gcd$ y (% x y))
-        )
-    )
+            (gcd$ y (% x y))))
     (cond
         ((lt? x y) (gcd y x))
         ((equal? x 0) 1)
-        (#t (gcd$ x y))
-    )
-)
+        (#t (gcd$ x y))))
 
 ;; }}}
 ;; {{{ misc

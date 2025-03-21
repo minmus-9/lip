@@ -9,7 +9,7 @@
 
 (define (ff1)
     ((lambda (g) `(,g (,`quasiquote ,g))) 
-        `(lambda (g) `(,g (,`quasiquote ,g)))))
+    `(lambda (g) `(,g (,`quasiquote ,g)))))
 
 (print ff1)
 (print (eval ff1))

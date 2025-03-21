@@ -252,14 +252,16 @@ def k_op_define(ctx):
 
 @spcl("if")
 def op_if(ctx):
+    a = EL
     try:
         ctx.exp, rest = ctx.argl
         c, rest = rest
-        a, rest = rest
+        if rest is not EL:
+            a, rest = rest
         if rest is not EL:
             raise TypeError()
     except TypeError:
-        raise SyntaxError("expected three args") from None
+        raise SyntaxError("expected two or three args") from None
     ctx.s = [(c, a), [ctx.env, [ctx.cont, ctx.s]]]
     ctx.cont = k_op_if
     return k_leval
@@ -433,7 +435,6 @@ def qq_(ctx):
         return ctx.cont
     app = form[0]
     if eq(app, ctx.symbol("quasiquote")):
-        ## XXX proper nesting?
         ctx.argl = form[1]
         return op_quasiquote
     if eq(app, ctx.symbol("unquote")):

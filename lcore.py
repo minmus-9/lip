@@ -277,6 +277,7 @@ class Context:
 
     ## stack
 
+    ## XXX call .clear_stack() automatically for unhandled exceptions?
     def clear_stack(self):
         self.s = EL
 
@@ -384,7 +385,7 @@ def create_lambda(params, body, env):
         return k_leval
 
     lcall.special = lcall.ffi = False
-    lcall.lambda_ = params, body
+    lcall.lambda_ = params, body  ## for stringify
 
     return lcall
 
