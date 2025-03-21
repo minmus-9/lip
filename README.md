@@ -28,7 +28,7 @@ below),
     (iter 1 n))
 ```
 
-It weighs in at ~1400 Python SLOC and ~600 LISP SLOC (for the standard
+It weighs in at ~1650 Python SLOC and ~550 LISP SLOC (for the standard
 library). This may seem like a lot, but there's a lot in there -- see
 "The Language" below.
 

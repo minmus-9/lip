@@ -154,10 +154,12 @@ def cons(x, y):
 
 def set_car(x, y):
     listcheck(x)[0] = y
+    return EL
 
 
 def set_cdr(x, y):
     listcheck(x)[1] = y
+    return EL
 
 
 ## }}}

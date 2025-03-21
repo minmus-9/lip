@@ -458,12 +458,12 @@
             ((eq? m 'get) (table$find items (car args) compare))
             ((eq? m 'set)
                 (define key (car args))
-                (define value (cdr args))
+                (define value (cadr args))
                 (define node (table$find items key compare))
                 (if
                     (null? node)
-                    (set! items (cons (cons key (cons value ())) items))
-                    (set-car! (cdr node) value)))
+                    (set! items (cons (cons key value) items))
+                    (set-cdr! node value)))
             ((eq? m 'del) (set! items (table$delete items (car args) compare)))
             ((eq? m 'known) (table$find items (car args) compare))
             ((eq? m 'setdefault)
@@ -472,8 +472,10 @@
                 (define node (table$find items key compare))
                 (if
                     (null? node)
-                    (set! items (cons (cons key (cons value ())) items))
-                    (set-cdr! node value)))
+                    (begin
+                        (set! items (cons (cons key value) items))
+                        value)
+                    (cdr node)))
             ((eq? m 'empty?) (null? items))
             ((eq? m 'iter)
                 (let ((lst items))
@@ -497,8 +499,8 @@
       ()
       (if
           (compare (car (car items)) key)
-          (car items)
-          (table$find (cdr items) key compare))))
+          (table$find (cdr items) key compare)
+          (car items))))
 
 (define (table$delete items key compare)
     (define prev ())
@@ -508,11 +510,11 @@
             items
             (if
                 (compare (car (car assoc)) key)
+                (begin (set! prev assoc) (helper (cdr assoc)))
                 (if
                     (null? prev)
                     (cdr assoc)
-                    (begin (set-cdr! prev (cdr assoc)) items))
-                (begin (set! prev assoc) (helper (cdr assoc))))))
+                    (begin (set-cdr! prev (cdr assoc)) items)))))
     (helper items))
 
 ;; }}}
@@ -618,6 +620,11 @@
         (#t (gcd$ x y))
     )
 )
+
+;; }}}
+;; {{{ misc
+
+(special (no-op & args) ())  ;; replace no-op with begin to execute args
 
 ;; }}}
 
