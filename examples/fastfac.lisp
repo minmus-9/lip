@@ -5,6 +5,8 @@
 ;;                   page for lambda calculus shows this technique as
 ;;                   well
 ;;
+;; this ain't all that fast ;D
+;;
 ;; lip - lisp in python
 ;;       https://github.com/minmus-9/lip
 ;; Copyright (C) 2025  Mark Hays (github:minmus-9)
