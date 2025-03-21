@@ -143,7 +143,7 @@ def op_begin_next(ctx):
         ## i didn't understand this until watching top(1) run as
         ## my tail-recursive code chewed up ram
         ##
-        ## i *thought* begin/do wanted to be a special form because
+        ## i *thought* begin wanted to be a special form because
         ## the order of arg evaluation is up to the implementation.
         ## since lcore explicitly evaluates args left to right, i
         ## figured it didn't really matter. but no, not even close.
@@ -152,7 +152,7 @@ def op_begin_next(ctx):
         ## form: the stack is now unwound as we evaluate the
         ## last arg so we get a tail call opporuntity. if you
         ## do the moral equivalent of
-        ##          (define (do & args) (last args))
+        ##          (define (begin & args) (last args))
         ## it'll work fine, but you don't get tco, just recursion.
         ##
         ## which you can see with top(1) :D
