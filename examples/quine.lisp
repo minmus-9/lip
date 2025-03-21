@@ -1,18 +1,18 @@
 ;; from https://okmij.org/ftp/meta-programming/Quines.html
 
 (define (ff) ((lambda (f) `(,f ',f)) '(lambda (f) `(,f ',f))))
+
 (print ff)
-;; => ((lambda (f) (quasiquote ((unquote f) (quote (unquote f))))) (quote (lambda (f) (quasiquote ((unquote f) (quote (unquote f)))))))
 (print (eval ff))
-;; => ((lambda (f) (quasiquote ((unquote f) (quote (unquote f))))) (quote (lambda (f) (quasiquote ((unquote f) (quote (unquote f)))))))
 
-
-;; cool -- this one doesn't work! need a new quasiquoter i guess
-;; it'll take me a while to figure out how this one even works
 ;;
-;;(define ff1
-;;       ((lambda (g) `(,g (,`quasiquote ,g))) 
-;;          `(lambda (g) `(,g (,`quasiquote ,g)))))
+
+(define (ff1)
+    ((lambda (g) `(,g (,`quasiquote ,g))) 
+        `(lambda (g) `(,g (,`quasiquote ,g)))))
+
+(print ff1)
+(print (eval ff1))
 
 
 
