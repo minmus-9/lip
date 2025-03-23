@@ -291,17 +291,16 @@ optimized a bit because they're used so much. Certain other "hot
 spots" have been optimized based on profiling data.
 
 Passing circular data structures into the core will definitely cause
-infinite loops. Fixing this would have a grave performance impact
-and so it hasn't been done.
+infinite loops. Fixing this in general would have a grave performance
+impact and so it hasn't been done.
 
 The Python GC is the LISP GC and so any LISP circular references
 should eventually get cleaned up.
 
 Internal exceptions (wrong #args etc) generate Python exceptions
 that are handled in the usual Python way; LISP exception handling
-is very basic (see `trap`) and terrible (see `trap`). If there's an
-error, you *MUST* clear the stack, etc like the REPL in `lcore.py`
-does.
+is very basic (see `trap`). If there's an error at the python level,
+you *MUST* clear the stack, etc like the REPL in `lcore.py` does.
 
 ## API
 
@@ -353,3 +352,4 @@ Here are some lisp-related refs that *heavily* influenced this code:
 - https://www-formal.stanford.edu/jmc/index.html
 - https://www-formal.stanford.edu/jmc/recursive.pdf
 - https://legacy.cs.indiana.edu/~dyb/papers/3imp.pdf
+- https://www.cs.cmu.edu/~dst/LispBook/book.pdf

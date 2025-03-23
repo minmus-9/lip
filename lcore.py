@@ -239,7 +239,7 @@ def ffi(name):
 class Context:
     ## pylint: disable=too-many-instance-attributes
 
-    __slots__ = ("argl", "cont", "env", "exp", "val", "s", "symbol", "g", "q")
+    __slots__ = ("argl", "cont", "env", "exp", "val", "s", "symbol", "g", "quot")
 
     def __init__(self):
         ## registers
@@ -255,7 +255,7 @@ class Context:
         for k, v in G__.items():
             genv[symbol(k)] = v
         ## quote-to-symbol table
-        self.q = {
+        self.quot = {
             "'": self.symbol("quote"),
             ",": self.symbol("unquote"),
             ",@": self.symbol("unquote-splicing"),
@@ -716,7 +716,7 @@ class Parser:
     def __init__(self, ctx, callback):
         self.ctx = ctx
         self.callback = callback
-        self.qt = ctx.q  ## quotes and replacements
+        self.qt = ctx.quot  ## quotes and replacements
         self.pos = [0]  ## yup, a list, see feed() and S_COMMA code
         self.token = []
         self.add = self.token.append
