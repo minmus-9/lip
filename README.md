@@ -299,8 +299,7 @@ should eventually get cleaned up.
 
 Internal exceptions (wrong #args etc) generate Python exceptions
 that are handled in the usual Python way; LISP exception handling
-is very basic (see `trap`). If there's an error at the python level,
-you *MUST* clear the stack, etc like the REPL in `lcore.py` does.
+is very basic (see `trap`).
 
 ## API
 

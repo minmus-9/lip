@@ -624,12 +624,14 @@ class ListBuilder:
         if self.h is EL:
             self.h = n
         else:
+            if self.t[1] is not EL:
+                raise SyntaxError("extra junk after .")
             self.t[1] = n
         self.t = n
 
     def cons_tail(self, x):
         if self.h is EL:
-            raise SyntaxError("saw '.' at start of list")
+            raise SyntaxError("saw . at start of list")
         self.t[1] = x
 
     def empty(self):
@@ -746,7 +748,7 @@ class Parser:
     def __init__(self, ctx, callback):
         self.ctx = ctx
         self.dot = ctx.dot  ## symbol(".")
-        self.saw_dot = False
+        self.dstack = EL  ## stack of in-progress .-s
         self.callback = callback
         self.qt = ctx.quot  ## quotes and replacements
         self.pos = [0]  ## yup, a list, see feed() and S_COMMA code
@@ -773,6 +775,8 @@ class Parser:
                 raise SyntaxError(f"eof expecting {self.parens[0]!r}")
             if self.qstack is not EL:
                 raise SyntaxError("unclosed quasiquote")
+            if self.dstack is not EL:
+                raise SyntaxError("eof in . construct")
             return
         pos = self.pos
         n = len(text)
@@ -783,15 +787,16 @@ class Parser:
             p = pos[0] = pos[0] + 1  ## re-read in case of comma adjustment
 
     def append(self, x):
+        d = self.dstack
         if self.lstack is EL:
-            assert not self.saw_dot  ## handled in .sym()
+            if d is not EL:
+                raise SyntaxError("got . at end of expr")
             self.callback(self.quote_wrap(x))
+        elif d is not EL and self.lstack[0] is d[0]:
+            d[0].cons_tail(self.quote_wrap(x))
+            self.dstack = d[1]
         else:
-            if self.saw_dot:
-                self.lstack[0].cons_tail(self.quote_wrap(x))
-                self.saw_dot = False
-            else:
-                self.lstack[0].append(self.quote_wrap(x))
+            self.lstack[0].append(self.quote_wrap(x))
 
     def quote_wrap(self, x):
         qs = self.qstack
@@ -805,6 +810,15 @@ class Parser:
         if self.token:
             t = "".join(self.token)
             self.token.clear()  ## faster than del[:]
+            if t == str(self.dot):
+                if self.lstack is EL:
+                    raise SyntaxError("saw . at start of expr expecting (")
+                if self.lstack[0].empty():
+                    raise SyntaxError("saw . at start of expr")
+                if self.dstack is not EL and self.dstack[0] is self.lstack[0]:
+                    raise SyntaxError("saw double dot")
+                self.dstack = [self.lstack[0], self.dstack]
+                return
             if t[0].lower() in "0123456789-.+abcdef":
                 try:
                     t = int(t, 0)
@@ -814,21 +828,12 @@ class Parser:
                     except:  ## pylint: disable=bare-except
                         t = self.ctx.symbol(t)
             else:
-                if t == ".":
-                    if self.saw_dot:
-                        raise SyntaxError("saw double-.")
-                    if self.lstack is EL:
-                        raise SyntaxError("saw . at start of expr expecting (")
-                    if self.lstack[0].empty():
-                        raise SyntaxError("saw . at start of expr")
-                    self.saw_dot = True
-                    return
                 t = self.ctx.symbol(t)
             self.append(t)
 
     def do_sym(self, ch):
         ## pylint: disable=too-many-branches
-        if ch in "()[] \n\r\t;\"',`":  ## all of this is actually faster.
+        if ch in "()[] \n\r\t;\"',`":  ## this and what follows is actually faster!
             if ch in "([":
                 self.sym()
                 ## faster than a lut:
