@@ -285,7 +285,16 @@ class Context:
         self.cont = self.land
         self.exp = x
         self.env = self.g if env is SENTINEL else env
-        return self.trampoline(k_leval)
+        try:
+            return self.trampoline(k_leval)
+        except:
+            ## clear the stack. we have a propagating exception from some
+            ## internal error, (error), (exit), or (eval). there's no way
+            ## to go back because we're off the trampoline now, so get set
+            ## up for the next call. if you're using a Parser, you'll need
+            ## to create a new one.
+            self.s = EL
+            raise
 
     def stringify(self, x):
         self.cont = self.land
@@ -293,10 +302,6 @@ class Context:
         return self.trampoline(k_stringify)
 
     ## stack
-
-    ## XXX call .clear_stack() automatically for unhandled exceptions?
-    def clear_stack(self):
-        self.s = EL
 
     def pop(self):
         ret, self.s = self.s
@@ -463,7 +468,7 @@ def k_stringify_setup(ctx, items):
     except TypeError:
         ctx.exp = items
         items = EL
-        ctx.push(str(ctx.symbol(".")))
+        ctx.push(str(ctx.dot))
     if items is EL:
         ctx.cont = k_stringify_last
     else:
@@ -625,7 +630,7 @@ class ListBuilder:
     def cons_tail(self, x):
         if self.h is EL:
             raise SyntaxError("saw '.' at start of list")
-        self.t[0] = [self.t[0], x]
+        self.t[1] = x
 
     def empty(self):
         return self.h is EL
@@ -956,10 +961,8 @@ def repl(ctx, callback):
         try:
             p.feed(x)
         except SystemExit as exc:
-            ctx.clear_stack()
             stop, rc = True, exc.args[0]
         except:  ## pylint: disable=bare-except
-            ctx.clear_stack()
             p = Parser(ctx, callback)
             traceback.print_exception(*sys.exc_info())
 
