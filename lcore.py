@@ -102,11 +102,14 @@ class Symbol:
 
 
 def is_atom(x):
-    return x.__class__ is Symbol or x is EL or x is T
+    ## Symbol, EL, and T are atoms. but integers, floats, and strings are
+    ## immutable (even in python) so they should be atoms too. this change
+    ## fixes a fail.
+    return x.__class__ is not list
 
 
 def eq(x, y):
-    return x is y and is_atom(x)
+    return x is y  ## and is_atom(x) NO, needed for prev-seen loop detection
 
 
 def symcheck(x):
@@ -168,7 +171,7 @@ def set_cdr(x, y):
 
 def create_environment(ctx, params, args, parent):
     t = {SENTINEL: parent}
-    v = ctx.symbol("&")
+    v = ctx.var
     variadic = False
     try:
         while params is not EL:
@@ -239,7 +242,19 @@ def ffi(name):
 class Context:
     ## pylint: disable=too-many-instance-attributes
 
-    __slots__ = ("argl", "cont", "env", "exp", "val", "s", "symbol", "g", "quot")
+    __slots__ = (
+        "argl",
+        "cont",
+        "env",
+        "exp",
+        "val",
+        "s",
+        "symbol",
+        "g",
+        "quot",
+        "var",
+        "dot",
+    )
 
     def __init__(self):
         ## registers
@@ -247,9 +262,11 @@ class Context:
         ## stack
         self.s = EL
         ## symbols
-        self.symbol = create_symbol_table()
+        symbol = self.symbol = create_symbol_table()
+        ## special syms
+        self.var = symbol("&")  ## variadic arg sep
+        self.dot = symbol(".")  ## for (1 . 2)
         ## global env
-        symbol = self.symbol
         self.g = genv = create_environment(self, EL, EL, SENTINEL)
         genv[symbol("#t")] = T
         for k, v in G__.items():

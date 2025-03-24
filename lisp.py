@@ -23,8 +23,6 @@
 ## pylint: disable=invalid-name, too-many-lines
 ## XXX pylint: disable=missing-docstring
 
-import sys
-
 from lcore import (
     main as lmain,
     Context,
@@ -93,6 +91,7 @@ def op_and(ctx):
     ctx.s = [ctx.env, [ctx.cont, ctx.s]]
     return op_and_setup(ctx, args)
 
+
 def op_and_setup(ctx, args):
     try:
         ctx.exp, args = args
@@ -105,6 +104,7 @@ def op_and_setup(ctx, args):
     ctx.s = [args, ctx.s]
     ctx.cont = k_op_and_next
     return k_leval
+
 
 def k_op_and_next(ctx):
     args, ctx.s = ctx.s
@@ -300,6 +300,7 @@ def op_or(ctx):
     ctx.s = [ctx.env, [ctx.cont, ctx.s]]
     return op_or_setup(ctx, args)
 
+
 def op_or_setup(ctx, args):
     try:
         ctx.exp, args = args
@@ -312,6 +313,7 @@ def op_or_setup(ctx, args):
     ctx.s = [args, ctx.s]
     ctx.cont = k_op_or_next
     return k_leval
+
 
 def k_op_or_next(ctx):
     args, ctx.s = ctx.s
@@ -410,6 +412,7 @@ def op_trap(ctx):
     ctx.cont = k_op_trap
     return k_leval
 
+
 def k_op_trap(ctx):
     xhandler = ctx.val
     try:
@@ -417,7 +420,7 @@ def k_op_trap(ctx):
     except AttributeError:
         raise TypeError(
             f"expected callable exception handler, got {xhandler}"
-        )
+        ) from None
     expr = ctx.pop()
     ctx.pop_ce()  ## have to reset stack to way it was before op_trap()...
     state = ctx.save()  ## ... ok, we're good to go
