@@ -26,7 +26,7 @@
 
 ;; used everywhere
 (define (pair? x) (eq? (type x) 'pair))
-(define (list & args) args)
+(define (list . args) args)
 
 ;; ditto
 (define (caar l) (car (car l)))
@@ -244,7 +244,7 @@
 (define (transpose lists)
     (ftranspose (lambda (x) x) lists))
 
-(define (map f & lists)
+(define (map f . lists)
     (ftranspose (lambda (tuple) (apply f tuple)) lists))
 
 ;; }}}
@@ -304,7 +304,7 @@
                 (pair? x)
                 (set-cdr! tail x)
                 (if (null? x) () (error "can only append list")))))
-    (define (dispatch m & args)
+    (define (dispatch m . args)
         (cond
             ((eq? m 'extend) (extend (unpack1 args)))
             ((eq? m 'enqueue) (enqueue (unpack1 args)))
@@ -318,7 +318,7 @@
 ;; }}}
 ;; {{{ join
 
-(define (join x & lists)
+(define (join x . lists)
     (define q (queue))
     (define (j x lists)
         (if
@@ -336,7 +336,7 @@
 ;; }}}
 ;; {{{ let
 
-(special (let __special_let_vdefs__ & __special_let_body__)
+(special (let __special_let_vdefs__ . __special_let_body__)
     (eval (let$ __special_let_vdefs__ __special_let_body__) 1))
 
 (define (let$ vdefs body)
@@ -358,7 +358,7 @@
 ;; }}}
 ;; {{{ let*
 
-(special (let* __special_lets_vdefs__ & __special_lets_body__)
+(special (let* __special_lets_vdefs__ . __special_lets_body__)
     (eval (let*$ __special_lets_vdefs__ __special_lets_body__) 1))
 
 (define (let*$ vdefs body)
@@ -389,7 +389,7 @@
 ;; {{{ letrec
 ;; i saw this (define x ()) ... (set! x value) on stackoverflow somewhere
 
-(special (letrec __special_letrec_vdefs__ & __special_letrec_body__)
+(special (letrec __special_letrec_vdefs__ . __special_letrec_body__)
     (eval (letrec$ __special_letrec_vdefs__ __special_letrec_body__) 1))
 
 (define (letrec$ vdefs body)
@@ -438,7 +438,7 @@
                         (cdr assoc)
                         (begin (set-cdr! prev (cdr assoc)) items)))))
         (helper items))
-    (define (dispatch m & args)
+    (define (dispatch m . args)
         (cond
             ((eq? m 'get) (table$find items (car args) compare))
             ((eq? m 'set)
@@ -601,7 +601,7 @@
 ;; }}}
 ;; {{{ misc
 
-(special (no-op & args) ())  ;; replace no-op with begin to execute args
+(special (no-op . args) ())  ;; replace no-op with begin to execute args
 
 ;; }}}
 

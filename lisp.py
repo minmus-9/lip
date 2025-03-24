@@ -152,7 +152,7 @@ def op_begin_next(ctx):
         ## form: the stack is now unwound as we evaluate the
         ## last arg so we get a tail call opporuntity. if you
         ## do the moral equivalent of
-        ##          (define (begin & args) (last args))
+        ##          (define (begin . args) (last args))
         ## it'll work fine, but you don't get tco, just recursion.
         ##
         ## which you can see with top(1) :D

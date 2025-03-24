@@ -6,7 +6,7 @@
 (define (mapcar f L)
     (if (null? L) () (cons (f (car L)) (mapcar f (cdr L)))))
 
-(special (defun sym args & body)
+(special (defun sym args . body)
     (eval `(define ,(cons sym args) ,@body) 1))
 
 (defun deriv-aux (a) (list '/ (deriv a) a))

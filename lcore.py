@@ -184,12 +184,12 @@ def create_environment(ctx, params, args, parent):
                 if params is EL:
                     t[p] = args
                     break
-                raise SyntaxError("trailing junk after &")
+                raise SyntaxError("trailing junk after .")
             else:
                 t[p], args = args
         else:
             if variadic:
-                raise SyntaxError("params end with &")
+                raise SyntaxError("params end with .")
             if args is not EL:
                 raise SyntaxError("too many args")
         return t
@@ -264,7 +264,7 @@ class Context:
         ## symbols
         symbol = self.symbol = create_symbol_table()
         ## special syms
-        self.var = symbol("&")  ## variadic arg sep
+        self.var = symbol(".")  ## variadic arg sep
         self.dot = symbol(".")  ## for (1 . 2)
         ## global env
         genv = self.g = create_environment(self, EL, EL, SENTINEL)

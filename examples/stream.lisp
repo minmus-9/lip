@@ -114,7 +114,7 @@
 
 ;(stream-for-each print (stream-enumerate-interval 1 10))
 
-(define (stream-map proc & argstreams)
+(define (stream-map proc . argstreams)
     (if
         (stream-null? (car argstreams))
         the-empty-stream
@@ -151,9 +151,7 @@
 
 (define fibs (cons-stream 0 (cons-stream 1 (stream-add (stream-cdr fibs) fibs))))
 
-(define (noop & args) ())
-
-(noop (iter-func
+(no-op (iter-func
     (lambda (stream) (print (stream-car stream)) (stream-cdr stream))
     fibs
     10))

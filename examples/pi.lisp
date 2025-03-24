@@ -5,7 +5,7 @@
     (define z 1)
     (define k 3)
     (define s -1.0)
-    (define (f c & _) (if (< k 25000) (c c) ()));print (* z 4))))
+    (define (f c . _) (if (< k 25000) (c c) ()));print (* z 4))))
     (f  (call/cc (lambda (cc) cc))
         (set! z (+ z (/ s k)))
         (set! k (+ k 2))
@@ -14,7 +14,7 @@
 )
 (timeit pi1 1)
 
-(define (pi2 & _)
+(define (pi2 . _)
     (define k 2)
     (define a 4)
     (define b 1)

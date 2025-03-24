@@ -9,7 +9,7 @@
     (if (null? L) () (cons (f (car L)) (mapcar f (cdr L)))))
 (define (cddr l) (cdr (cdr l)))
 
-(special (defvar var & value)
+(special (defvar var . value)
     (if
         (null? value)
         (set! value ())
@@ -19,7 +19,7 @@
             (error "too many args, expected one or two")))
     (eval `(define ,var ,value) 1))
 
-(special (defun sym args & body)
+(special (defun sym args . body)
     (if
         (null? (cdr body))
         (set! body (car body))

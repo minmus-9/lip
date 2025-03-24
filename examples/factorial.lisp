@@ -204,7 +204,7 @@
 
 (define (!16 n)
     (define n! 1)
-    ((lambda (c & _)
+    ((lambda (c . _)
         (if (< n 2) n! (c c)))
         (call/cc)
         (set! n! (* n! n))

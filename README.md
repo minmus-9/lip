@@ -143,11 +143,11 @@ The `lisp.lisp` standard library defines a bunch of procedures in LISP:
 |`(let ((var value) ...) body)`|same as `((lambda (vars) body) values)`|
 |`(let* ((var value ...) body)`|same but each `value` can access preceding `vars`|
 |`(letrec ((var value) ...) body)`|same but all vars are pre-declared|
-|`(list & args)`|create a list from args|
+|`(list . args)`|create a list from args|
 |`(loop f)`|infinite loop calling `(f)`|
 |`(loop-with-break f)`|infinite loop calling `(f break)`, use `(break)` to terminate loop|
 |`(lshift x n)`|bitwise left shift `x` by `n` bits|
-|`(map f & lists)`|return list of `(f x y ...)` for each `x,y,...` in `(map1 car lists)` over `lists`|
+|`(map f . lists)`|return list of `(f x y ...)` for each `x,y,...` in `(map1 car lists)` over `lists`|
 |`(map1 f list)`|return list of `(f x)` for each `x` in `list`|
 |`(not x)`|logical negation of `x`|
 |`(or ...)`|logical-or of args|
