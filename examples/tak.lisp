@@ -38,6 +38,23 @@
 
 ;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
+(define (ctak x y z)
+    (trap (ctak-aux x y z) (lambda (ret _) ret)))
+
+(define (ctak-aux x y z)
+    (if
+        (not (< y x))
+        (error z)
+        (ctak-aux
+            (trap (ctak-aux (- x 1) y z) (lambda (ret _) ret))
+            (trap (ctak-aux (- y 1) z x) (lambda (ret _) ret))
+            (trap (ctak-aux (- z 1) x y) (lambda (ret _) ret)))))
+
+
+(timeit (lambda (_) (print (ctak 18 12 6))) 1)
+
+;; from https://www.dreamsongs.com/Files/Timrep.pdf
+
 (define = equal?)
 (define (1- x) (- x 1))
 (define null null?)
