@@ -622,6 +622,14 @@ class ListBuilder:
             self.t[1] = n
         self.t = n
 
+    def cons_tail(self, x):
+        if self.h is EL:
+            raise SyntaxError("saw '.' at start of list")
+        self.t[0] = [self.t[0], x]
+
+    def empty(self):
+        return self.h is EL
+
     def get(self):
         return self.h
 
@@ -732,6 +740,8 @@ class Parser:
 
     def __init__(self, ctx, callback):
         self.ctx = ctx
+        self.dot = ctx.dot  ## symbol(".")
+        self.saw_dot = False
         self.callback = callback
         self.qt = ctx.quot  ## quotes and replacements
         self.pos = [0]  ## yup, a list, see feed() and S_COMMA code
@@ -769,9 +779,14 @@ class Parser:
 
     def append(self, x):
         if self.lstack is EL:
+            assert not self.saw_dot  ## handled in .sym()
             self.callback(self.quote_wrap(x))
         else:
-            self.lstack[0].append(self.quote_wrap(x))
+            if self.saw_dot:
+                self.lstack[0].cons_tail(self.quote_wrap(x))
+                self.saw_dot = False
+            else:
+                self.lstack[0].append(self.quote_wrap(x))
 
     def quote_wrap(self, x):
         qs = self.qstack
@@ -794,6 +809,15 @@ class Parser:
                     except:  ## pylint: disable=bare-except
                         t = self.ctx.symbol(t)
             else:
+                if t == ".":
+                    if self.saw_dot:
+                        raise SyntaxError("saw double-.")
+                    if self.lstack is EL:
+                        raise SyntaxError("saw . at start of expr expecting (")
+                    if self.lstack[0].empty():
+                        raise SyntaxError("saw . at start of expr")
+                    self.saw_dot = True
+                    return
                 t = self.ctx.symbol(t)
             self.append(t)
 
