@@ -267,16 +267,16 @@ class Context:
         self.var = symbol("&")  ## variadic arg sep
         self.dot = symbol(".")  ## for (1 . 2)
         ## global env
-        self.g = genv = create_environment(self, EL, EL, SENTINEL)
+        genv = self.g = create_environment(self, EL, EL, SENTINEL)
         genv[symbol("#t")] = T
         for k, v in G__.items():
             genv[symbol(k)] = v
         ## quote-to-symbol table
         self.quot = {
-            "'": self.symbol("quote"),
-            ",": self.symbol("unquote"),
-            ",@": self.symbol("unquote-splicing"),
-            "`": self.symbol("quasiquote"),
+            "'": symbol("quote"),
+            ",": symbol("unquote"),
+            ",@": symbol("unquote-splicing"),
+            "`": symbol("quasiquote"),
         }
 
     ## top level
