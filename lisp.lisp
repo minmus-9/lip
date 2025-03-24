@@ -24,10 +24,6 @@
 (define (unquote x) (error "cannot unquote here"))
 (define (unquote-splicing x) (error "cannot unquote-splicing here"))
 
-;; used everywhere
-(define (pair? x) (eq? (type x) 'pair))
-(define (list . args) args)
-
 ;; ditto
 (define (caar l) (car (car l)))
 (define (caaar l) (car (car (car l))))

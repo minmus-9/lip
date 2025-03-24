@@ -678,6 +678,12 @@ def k_op_exit(ctx):
     raise SystemExit(ctx.val)
 
 
+@glbl("list")
+def op_list(ctx):
+    ctx.val = ctx.argl
+    return ctx.cont
+
+
 @glbl("<")
 def op_lt(ctx):
     return binary(ctx, op_lt_f)
@@ -718,6 +724,12 @@ def op_null(ctx):
 def op_stringify(ctx):
     ctx.exp = ctx.unpack1()
     return k_stringify
+
+
+@glbl("pair?")
+def op_pairp(ctx):
+    ctx.val = T if ctx.unpack1().__class__ is list else EL
+    return ctx.cont
 
 
 @glbl("print")
