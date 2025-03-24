@@ -170,33 +170,25 @@ def set_cdr(x, y):
 
 
 def create_environment(ctx, params, args, parent):
+    p0, a0 = params, args
     t = {SENTINEL: parent}
-    v = ctx.var
-    variadic = False
     try:
         while params is not EL:
             p, params = params
             if p.__class__ is not Symbol:
                 raise SyntaxError("expected symbol, got {p!r}")
-            if p is v:
-                variadic = True
-            elif variadic:
-                if params is EL:
-                    t[p] = args
-                    break
-                raise SyntaxError("trailing junk after .")
-            else:
-                t[p], args = args
+            t[p], args = args
         else:
-            if variadic:
-                raise SyntaxError("params end with .")
             if args is not EL:
                 raise SyntaxError("too many args")
         return t
     except TypeError:
+        if params.__class__ is Symbol:
+            t[params] = args
+            return t
         if args is EL:
             raise SyntaxError("not enough args") from None
-        raise SyntaxError("expected list") from None
+        raise SyntaxError("expected symbol, got {params!r}") from None
 
 
 ## }}}
@@ -263,9 +255,8 @@ class Context:
         self.s = EL
         ## symbols
         symbol = self.symbol = create_symbol_table()
-        ## special syms
-        self.var = symbol(".")  ## variadic arg sep
-        self.dot = symbol(".")  ## for (1 . 2)
+        ## special sym
+        self.dot = symbol(".")  ## for (1 . 2) and variadic param list
         ## global env
         genv = self.g = create_environment(self, EL, EL, SENTINEL)
         genv[symbol("#t")] = T
