@@ -38,9 +38,7 @@
     (if
         (equal? element (car lst))
         #t
-        (memq element (cdr lst))
-    )
-)
+        (memq element (cdr lst))))
 
 (define (adjoin element set)
   (if (memq element set) set (cons element set)))
@@ -56,8 +54,7 @@
           ((memq (car l) list2) (cons (car l) (loop (cdr l))))
           (else (loop (cdr l))))
   )
-  (loop list1)
-)
+  (loop list1))
 
 (define (union list1 list2)
   (if (null? list1)

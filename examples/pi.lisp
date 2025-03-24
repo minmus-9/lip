@@ -9,9 +9,8 @@
     (f  (call/cc (lambda (cc) cc))
         (set! z (+ z (/ s k)))
         (set! k (+ k 2))
-        (set! s (- s))
-    )
-)
+        (set! s (- s))))
+
 (timeit pi1 1)
 
 (define (pi2 . _)
@@ -38,9 +37,7 @@
         (if
             (< k 20)
             #t
-            ()
-        )
-    )
+            ()))
     (define (inner)
         (if
             (equal? d d1)
@@ -52,9 +49,8 @@
                 (set! d1 (/ a1 b1))
                 #t
             )
-            ()
-        )
-    )
+            ()))
     (while next)
 )
+
 (timeit pi2 100)

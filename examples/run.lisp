@@ -7,7 +7,7 @@
         sum
         (loop (- i 1) (+ i sum)))))
 
-;; the rest of these are mine
+;; the rest of these are mine for benchmarking
 
 (define (run2 n)
  ((lambda (loop) (loop loop n 0))

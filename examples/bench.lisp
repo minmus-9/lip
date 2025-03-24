@@ -25,10 +25,7 @@
         (umul
             (/ x 2)
             (+ y y)
-            (- accum (- 0 (if (equal? (nand x 1) -2) y 0)))
-        )
-    )
-)
+            (- accum (- 0 (if (equal? (nand x 1) -2) y 0))))))
 
 (define (smul x y)
     (define sign
@@ -36,17 +33,13 @@
             (< x 0)
             (begin
                 (set! x (- 0 x))
-                -1
-            )
-            1
-        )
-    )
+                -1)
+            1))
     (if
         (< y 0)
         (begin
             (set! sign (- 0 sign))
-            (set! y (- 0 y))
-        )
+            (set! y (- 0 y)))
         ()
     )
     (if
@@ -60,34 +53,26 @@
 (define n2 928375983857632768578325623487965894695739794823743)
 
 (define (one)
-    (smul n1 n2)
-)
-
-(define (two)
-    (let
-        ((x (one))
-         (y (one))
-         (z (e n1 n2)))
-        x
-    )
-)
+    (smul n1 n2))
 
 (define (e x y)  ;; gcd
     (cond
         ((equal? y 0) x)
         ((equal? x 0) 1)
         (#t (define r (% x y))
-            (e y r)
-        )
-    )
-)
+            (e y r))))
+
+(define (two)
+    (let
+        ((x (one))
+         (y (one))
+         (z (e n1 n2)))
+        x))
 
 (define (three n l)
     (cond
         ((< n 1) l)
-        (#t (three (- n 1) (cons n l)))
-    )
-)
+        (#t (three (- n 1) (cons n l)))))
 
 
 (define (pie n)
@@ -95,10 +80,7 @@
         ((< n 1) ())
         (#t (e n1 n2)
             (two)
-            (pie (- n 1))
-        )
-    )
-)
+            (pie (- n 1)))))
 
 (define (four n)
     (pie 70)
@@ -106,8 +88,7 @@
     (join (reverse (three n ())) (reverse (three n ())))
     (join (reverse (three n ())) (reverse (three n ())))
     (join (reverse (three n ())) (reverse (three n ())))
-    (join (reverse (three n ())) (reverse (three n ())))
-)
+    (join (reverse (three n ())) (reverse (three n ()))))
 
 (define (five) (four 1000))
 

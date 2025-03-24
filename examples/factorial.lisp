@@ -23,9 +23,7 @@
     (if
         (< n 2)
         1
-        (* n (!1 (- n 1)))
-    )
-)
+        (* n (!1 (- n 1)))))
 
 ;; classic iterative
 (define (!2 n)
@@ -33,16 +31,12 @@
         (if
             (< k 2)
             n!
-            (iter (* n! k) (- k 1))
-        )
-    )
-    (iter 1 n)
-)
+            (iter (* n! k) (- k 1))))
+    (iter 1 n))
 
 ;; cheating :-)
 (define (!3 n)
-     (math 'factorial n)
-)
+     (math 'factorial n))
 
 (define (!4 n)
     (if
@@ -52,10 +46,7 @@
             (if (< n 2) n! (c c)))      ;; misleading formatting++
             (call/cc)
             (set! n! (* n! n))
-            (set! n (- n 1))
-        )
-    )
-)
+            (set! n (- n 1)))))
 
 (define (!5 n)
     (define n! 1)
@@ -66,17 +57,13 @@
         (begin
             (set! n! (* n n!))
             (set! n  (- n 1))
-            (c c)
-        )
-    )
-)
+            (c c))))
 
 (define (!6 n)
      (define n! 1)
      (define (f k) (set! n! (* n! k)))
      (for f 2 (+ n 1) 1)
-     n!
-)
+     n!)
 
 (define (!7 n)
     (define cont ())
@@ -86,13 +73,10 @@
     (cond
         ((< n 1) 1)
         ((< k 2) n!)
-        (#t (cont (- k 1)))
-    )
-)
+        (#t (cont (- k 1)))))
 
 (define (!8 n)
-    (fold-left * 2 (range 3 (+ n 1) 1))
-)
+    (fold-left * 2 (range 3 (+ n 1) 1)))
 
 (define (xrange start stop step)
     (define i (- start step))
@@ -101,24 +85,17 @@
             (< i stop)
             (begin
                 (set! i (+ i step))
-                i
-            )
-            ()
-        )
-    )
-    next
-)
+                i)
+            ()))
+    next)
 
 (define (!9 n)
     (define (f r)
         (if
             (null? (begin (define k ((car r))) k))
             (cdr r)
-            (f (cons (car r) (* (cdr r) k)))
-        )
-    )
-    (f (cons (xrange 2 n 1) 1))
-)
+            (f (cons (car r) (* (cdr r) k)))))
+    (f (cons (xrange 2 n 1) 1)))
 
 (define (!10 n)
     (let* (
@@ -129,10 +106,7 @@
         (if
             (null? k)
             n!
-            (begin (set! n! (* n! k)) (c (it)))
-        )
-    )
-)
+            (begin (set! n! (* n! k)) (c (it))))))
 
 (define (!11 n)
     (define c ())
@@ -140,9 +114,7 @@
         (set! n (- k 1))
         (if (< k 2) n! (c (* n! k))))
         (call/cc (lambda (cc) (set! c cc) 1))
-        n
-    )
-)
+        n))
 
 (define (!12 n)
     (define c ())
@@ -153,17 +125,9 @@
             (c
                 (cons
                     (* (car n!k) (cdr n!k))
-                    (- (cdr n!k) 1)
-                )
-            )
-        )
-    )
-    (f
-        (call/cc
-            (lambda (cc) (set! c cc) (cons 1 n))
-        )
-    )
-)
+                    (- (cdr n!k) 1)))))
+    (f (call/cc
+        (lambda (cc) (set! c cc) (cons 1 n)))))
 
 (define (!13 n)
     (define (f info)
@@ -174,19 +138,13 @@
                 (list
                     (* (car info) (cadr info))
                     (- (cadr info) 1)
-                    (caddr info)
-                )
-            )
-        )
-    )
-    (f (call/cc (lambda (cc) (list 1 n cc))))
-)
+                    (caddr info)))))
+    (f (call/cc (lambda (cc) (list 1 n cc)))))
 
 (define (!14 n)
     (define (f x)
         (set! n (- n 1))
-        (* n x)
-    )
+        (* n x))
     (iter-func f n (- n 1))
 )
 
@@ -196,11 +154,8 @@
         (define n! (cdr nn!))
         (cons
             (+ n 1)
-            (* n n!)
-        )
-    )
-    (cdr (iter-func f (cons 1 1) n))
-)
+            (* n n!)))
+    (cdr (iter-func f (cons 1 1) n)))
 
 (define (!16 n)
     (define n! 1)
@@ -208,9 +163,7 @@
         (if (< n 2) n! (c c)))
         (call/cc)
         (set! n! (* n! n))
-        (set! n  (- n  1))
-    )
-)
+        (set! n  (- n  1))))
 
 (define (!17 n)
     (define l ())
@@ -228,12 +181,8 @@
             (begin
                 (set! n! (* n! (car l)))
                 (set! l (cdr l))
-                #t
-            )
-        )
-    ))
-    n!
-)
+                #t))))
+    n!)
 
 (define (!18 n)
     (cond
@@ -241,20 +190,14 @@
         ((< n 3) 2)
         ((< n 4) 6)
         ((< n 5) 24)
-        (#t (* n (!18 (- n 1))))
-    )
-)
+        (#t (* n (!18 (- n 1))))))
 
 (define (!19 n)
     ((lambda (f) (f f 1 n))
         (lambda (f p k)
             (if (< k 2)
                 p
-                (f f (* p k) (- k 1))
-            )
-        )
-    )
-)
+                (f f (* p k) (- k 1))))))
 
 (define (!20 n)
     (define n! 1)
@@ -267,12 +210,8 @@
                     (set! n! (* n! k))
                     (set! k (+ k 1))
                 )
-                (break)
-            )
-        )
-    )
-    n!
-)
+                (break))))
+    n!)
 
 (define (!21 n)
     (let loop ((n n) (r 1))

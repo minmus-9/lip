@@ -1,13 +1,10 @@
 ;; from sicp
 
-(
-    (lambda (n)
+((lambda (n)
         (
             (lambda (fact) (fact fact n))
-                (lambda (ft k) (if (equal? k 1) 1 (* k (ft ft (- k 1)))))
-        )
-    )
-10)
+                (lambda (ft k) (if (equal? k 1) 1 (* k (ft ft (- k 1)))))))
+    10)
 
 
 
@@ -24,16 +21,12 @@
 (define (list-ref items n)
     (if (equal? n 0)
         (car items)
-        (list-ref (cdr items) (- n 1))
-    )
-)
+        (list-ref (cdr items) (- n 1))))
 
 (define (map proc items)
     (if (null? items)
         ()
-        (cons (proc (car items)) (map proc (cdr items)))
-    )
-)
+        (cons (proc (car items)) (map proc (cdr items)))))
 
 (define (scale-list items factor) (map (lambda (x) (* x factor)) items))
 
@@ -43,9 +36,7 @@
         ((null? list2) list1)
         (#t (cons
             (+ (car list1) (car list2))
-            (add-lists (cdr list1) (cdr list2))))
-    )
-)
+            (add-lists (cdr list1) (cdr list2))))))
 
 (define ones (cons 1 ones))
 (define integers (cons 1 (add-lists ones integers)))
