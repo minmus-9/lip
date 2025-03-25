@@ -57,30 +57,26 @@
 
 ;; absolute value
 (define (abs x)
-    (if
-        (< x 0)
-        (- x)
-        x))
+  (if (< x 0)
+      (- x)
+      x))
 
 ;; copysign
 (define (copysign x y)
-    (if
-        (< y 0)
-        (- (abs x))
-        (abs x)))
+  (if (< y 0)
+      (- (abs x))
+      (abs x)))
 
 ;; unsigned shifts
 (define (lshift x n)
-    (if
-        (equal? n 0)
-        x
-        (lshift (+ x x) (- n 1))))
+  (if (equal? n 0)
+      x
+      (lshift (+ x x) (- n 1))))
 
 (define (rshift x n)
-    (if
-        (equal? n 0)
-        x
-        (rshift (/ x 2) (- n 1))))
+  (if (equal? n 0)
+      x
+      (rshift (/ x 2) (- n 1))))
 
 ;; }}}
 ;; {{{ not
@@ -98,46 +94,42 @@
 ;; {{{ assert
 
 (special (assert __special_assert_sexpr__)
-    (if
-        (eval __special_assert_sexpr__ 1)
-        ()
-        (error (obj>string __special_assert_sexpr__))))
+  (if (eval __special_assert_sexpr__ 1)
+      ()
+      (error (obj>string __special_assert_sexpr__))))
 
 ;; }}}
 ;; {{{ reverse
 
 (define (reverse l)
-    (define (rev x y)
-        (if
-            (null? x)
-            y
-            (rev (cdr x) (cons (car x) y))))
-    (rev l ()))
+  (define (rev x y)
+    (if (null? x)
+        y
+        (rev (cdr x) (cons (car x) y))))
+  (rev l ()))
 
 ;; }}}
 ;; {{{ length
 
 (define (length lst)
-    (define (iter l i)
-        (if
-            (null? l)
-            i
-            (iter (cdr l) (- i -1))))
-    (iter lst 0))
+  (define (iter l i)
+    (if (null? l)
+        i
+        (iter (cdr l) (- i -1))))
+  (iter lst 0))
 
 ;; }}}
 ;; {{{ fold, transpose, map
 ;; sicp p.158-165 with interface tweaks
 (define (fold-left f x sequence)
-    (if 
-        (null? sequence)
-        x
-        (fold-left f (f (car sequence) x) (cdr sequence))))
+  (if (null? sequence)
+      x
+      (fold-left f (f (car sequence) x) (cdr sequence))))
 
 (define reduce fold-left)  ;; python nomenclature
 
 (define (fold-right f initial sequence)
-      (fold-left f initial (reverse sequence)))
+  (fold-left f initial (reverse sequence)))
 
 (define accumulate fold-right)  ;; sicp nomenclature
 
@@ -146,96 +138,89 @@
 
 ;; not elegant like sicp -- but faster in this lisp
 (define (map1 f lst)
-    (define ret ())  ;; head of queue and return value
-    (define tail ())  ;; tail of queue
-    (define (map1$ lst)
-        (if
-            (null? lst)
-            ret
-            (begin
-                ;; link in the new value
-                (set-cdr! tail (cons (f (car lst)) ()))
-                (set! tail (cdr tail))
-                ;; rinse, repeat
-                (map1$ (cdr lst)))))
-    (if
-        (null? lst)
+  (define ret ())  ;; head of queue and return value
+  (define tail ())  ;; tail of queue
+  (define (map1$ lst)
+    (if (null? lst)
+        ret
+        (begin
+          ;; link in the new value
+          (set-cdr! tail (cons (f (car lst)) ()))
+          (set! tail (cdr tail))
+          ;; rinse, repeat
+          (map1$ (cdr lst)))))
+    (if (null? lst)
         ()
         (begin
-            ;; enqueue the first item here to avoid main loop test
-            (set! ret (cons (f (car lst)) ()))
-            (set! tail ret)
-            (map1$ (cdr lst)))))
+          ;; enqueue the first item here to avoid main loop test
+          (set! ret (cons (f (car lst)) ()))
+          (set! tail ret)
+          (map1$ (cdr lst)))))
 
 ;; map 2 funcs over a lst of 2-lists (x y); for example, a list of (let) vdefs
 ;; returns
 ;;      (cons (map1 car lst) (map1 cadr lst))
 ;; but faster
 (define (map-2-list fcar fcdr lst)
-    (define rcar ())
-    (define tcar ())
-    (define rcdr ())
-    (define tcdr ())
-    (define (map2$ lst)
-        (if
-            (null? lst)
-            (cons rcar rcdr)
-            (begin
-                (define xy (car lst))
-                ;; link in the new values
-                (set-cdr! tcar (cons (fcar xy) ()))
-                (set! tcar (cdr tcar))
-                (set-cdr! tcdr (cons (fcdr xy) ()))
-                (set! tcdr (cdr tcdr))
-                ;; rinse, repeat
-                (map2$ (cdr lst)))))
-    (if
-        (null? lst)
+  (define rcar ())
+  (define tcar ())
+  (define rcdr ())
+  (define tcdr ())
+  (define (map2$ lst)
+    (if (null? lst)
+        (cons rcar rcdr)
+        (begin
+          (define xy (car lst))
+          ;; link in the new values
+          (set-cdr! tcar (cons (fcar xy) ()))
+          (set! tcar (cdr tcar))
+          (set-cdr! tcdr (cons (fcdr xy) ()))
+          (set! tcdr (cdr tcdr))
+          ;; rinse, repeat
+          (map2$ (cdr lst)))))
+    (if (null? lst)
         ()
         (begin
-            ;; enqueue the first item here to avoid main loop test
-            (define xy (car lst))
-            (set! rcar (cons (fcar xy) ()))
-            (set! tcar rcar)
-            (set! rcdr (cons (fcdr xy) ()))
-            (set! tcdr rcdr)
-            (map2$ (cdr lst)))))
+          ;; enqueue the first item here to avoid main loop test
+          (define xy (car lst))
+          (set! rcar (cons (fcar xy) ()))
+          (set! tcar rcar)
+          (set! rcdr (cons (fcdr xy) ()))
+          (set! tcdr rcdr)
+          (map2$ (cdr lst)))))
 
 (define (accumulate-n f initial sequences)
-    (define r ())
-    (define c (call/cc))
-    (if
-        (null? (car sequences))
-        (reverse r)
-        (begin
-            (set! r (cons (accumulate f initial (map1 car sequences)) r))
-            (set! sequences (map1 cdr sequences))
-            (c c))))
+  (define r ())
+  (define c (call/cc))
+  (if (null? (car sequences))
+      (reverse r)
+      (begin
+        (set! r (cons (accumulate f initial (map1 car sequences)) r))
+        (set! sequences (map1 cdr sequences))
+        (c c))))
 
 (define (ftranspose f lists)
-    (define ret ())  ;; head of queue and return value
-    (define tail ())  ;; tail of queue
-    (define (t1 lists)
-        (if
-            (null? (car lists))
-            ret
-            (begin
-                ;; link in the new value
-                (set-cdr! tail (cons (f (map1 car lists)) ()))
-                (set! tail (cdr tail))
-                ;; rinse, repeat
-                (t1 (map1 cdr lists)))))
-    (if
-        (null? lists)
+  (define ret ())  ;; head of queue and return value
+  (define tail ())  ;; tail of queue
+  (define (t1 lists)
+    (if (null? (car lists))
+        ret
+        (begin
+          ;; link in the new value
+          (set-cdr! tail (cons (f (map1 car lists)) ()))
+          (set! tail (cdr tail))
+          ;; rinse, repeat
+          (t1 (map1 cdr lists)))))
+    (if (null? lists)
         ()
         (if
             (null? (car lists))
             ()
             (begin
-                ;; enqueue the first item here to avoid main loop test
-                (set! ret (cons (f (map1 car lists)) ()))
-                (set! tail ret)
-                (t1 (map1 cdr lists))))))
+              ;; enqueue the first item here to avoid main loop test
+              (set! ret (cons (f (map1 car lists)) ()))
+              (set! tail ret)
+              (t1 (map1 cdr lists))))))
 
 (define (transpose lists)
     (ftranspose (lambda (x) x) lists))
@@ -247,86 +232,73 @@
 ;; {{{ queue
 
 (define (queue)
-    (define (unpack0 args)
-        (if args (error "too many args") ()))
-    (define (unpack1 args)
-        (if
-            (null? args)
-            (error "not enough args")
-            (if
-                (null? (cdr args))
-                (car args)
-                (error "too many args"))))
-    (define head ())
-    (define tail ())
-    (define node ())
-    (define (enqueue x)
-        (set! node (cons x ()))
-        (if
-            (null? head)
-            (set! head node)
-            (set-cdr! tail node)
-        )
-        (set! tail node))
-    (define (e lst)
-        (if
-            (null? lst)
-            ()
-            (begin
-                (set-cdr! tail (cons (car lst) ()))
-                (set! tail (cdr tail))
-                (e (cdr lst)))))
-    (define (extend lst)
-        (if
-            (null? lst)
-            ()
-            (begin
-                (enqueue (car lst))
-                (e (cdr lst)))))
-    (define (dequeue)
-        (define n head)
-        (set! head (cdr n))
-        (if
-            (null? head)
-            (set! tail ())
-            ()
-        )
-        (car n))
-    (define (append x)
-        (if
-            (null? head)
-            (extend x)
-            (if
-                (pair? x)
-                (set-cdr! tail x)
-                (if (null? x) () (error "can only append list")))))
-    (define (dispatch m . args)
-        (cond
-            ((eq? m 'extend) (extend (unpack1 args)))
-            ((eq? m 'enqueue) (enqueue (unpack1 args)))
-            ((eq? m 'dequeue) (unpack0 args) (dequeue))
-            ((eq? m 'get) (unpack0 args) head)
-            ((eq? m 'depth) (unpack0 args) (length head))
-            ((eq? m 'append) (append (unpack1 args)))
-            ((eq? m 'last) (car tail))))
-    dispatch)
+  (define (unpack0 args)
+    (if args (error "too many args") ()))
+  (define (unpack1 args)
+    (if (null? args)
+        (error "not enough args")
+        (if (null? (cdr args))
+            (car args)
+            (error "too many args"))))
+  (define head ())
+  (define tail ())
+  (define node ())
+  (define (enqueue x)
+    (set! node (cons x ()))
+    (if (null? head)
+        (set! head node)
+        (set-cdr! tail node))
+    (set! tail node))
+  (define (e lst)
+    (if (null? lst)
+        ()
+        (begin
+          (set-cdr! tail (cons (car lst) ()))
+          (set! tail (cdr tail))
+          (e (cdr lst)))))
+  (define (extend lst)
+    (if (null? lst)
+        ()
+        (begin
+          (enqueue (car lst))
+          (e (cdr lst)))))
+  (define (dequeue)
+    (define n head)
+    (set! head (cdr n))
+    (if (null? head)
+        (set! tail ())
+        ())
+    (car n))
+  (define (append x)
+    (if (null? head)
+        (extend x)
+        (if (pair? x)
+            (set-cdr! tail x)
+            (if (null? x) () (error "can only append list")))))
+  (define (dispatch m . args)
+    (cond ((eq? m 'extend) (extend (unpack1 args)))
+          ((eq? m 'enqueue) (enqueue (unpack1 args)))
+          ((eq? m 'dequeue) (unpack0 args) (dequeue))
+          ((eq? m 'get) (unpack0 args) head)
+          ((eq? m 'depth) (unpack0 args) (length head))
+          ((eq? m 'append) (append (unpack1 args)))
+          ((eq? m 'last) (car tail))))
+  dispatch)
 
 ;; }}}
 ;; {{{ join
 
 (define (join x . lists)
-    (define q (queue))
-    (define (j x lists)
-        (if
-            (null? lists)
-            (begin
-                (q 'append x)
-                (q 'get)
-            )
-            (begin
-                (q 'extend x)
-                (j (car lists) (cdr lists)))))
-    (if (null? lists) x (j x lists))
+  (define q (queue))
+  (define (j x lists)
+    (if (null? lists)
+        (begin
+          (q 'append x)
+          (q 'get))
+        (begin
+          (q 'extend x)
+          (j (car lists) (cdr lists)))))
+  (if (null? lists) x (j x lists))
 )
 
 ;; }}}
@@ -336,20 +308,19 @@
     (eval (let$ __special_let_vdefs__ __special_let_body__) 1))
 
 (define (let$ vdefs body)
-    (if
-        (eq? (type vdefs) 'symbol)
-        (let$3 vdefs (car body) (cdr body))
-        (let$2 vdefs body)))
+  (if (eq? (type vdefs) 'symbol)
+      (let$3 vdefs (car body) (cdr body))
+      (let$2 vdefs body)))
 
 (define (let$2 vdefs body)
-    (define xy (map-2-list car cadr vdefs))
-    `((lambda (,@(car xy)) ,@body) ,@(cdr xy)))
+  (define xy (map-2-list car cadr vdefs))
+  `((lambda (,@(car xy)) ,@body) ,@(cdr xy)))
 
 (define (let$3 sym vdefs body)
-    (define xy (map-2-list car cadr vdefs))
-    `(begin
-        (define (,sym ,@(car xy)) ,@body)
-        (,sym ,@(cdr xy))))
+  (define xy (map-2-list car cadr vdefs))
+  `(begin
+     (define (,sym ,@(car xy)) ,@body)
+     (,sym ,@(cdr xy))))
 
 ;; }}}
 ;; {{{ let*
@@ -358,28 +329,25 @@
     (eval (let*$ __special_lets_vdefs__ __special_lets_body__) 1))
 
 (define (let*$ vdefs body)
-    (if
-        (eq? (type vdefs) 'symbol)
-        (let*$3 vdefs (car body) (cdr body))
-        (let*$2 vdefs body)))
+  (if (eq? (type vdefs) 'symbol)
+      (let*$3 vdefs (car body) (cdr body))
+      (let*$2 vdefs body)))
 
 (define (let*$2 vdefs body)
-    (if
-        (null? vdefs)
-        (if (null? (cdr body)) (car body) (cons 'begin body))
-        (begin
-            (define kv (car vdefs))
-          `((lambda (,(car kv)) ,(let*$2 (cdr vdefs) body)) ,(cadr kv)))))
+  (if (null? vdefs)
+      (if (null? (cdr body)) (car body) (cons 'begin body))
+      (begin
+        (define kv (car vdefs))
+        `((lambda (,(car kv)) ,(let*$2 (cdr vdefs) body)) ,(cadr kv)))))
 
 (define (let*$3 sym vdefs body)
-    (define (inner vdefs)
-        (if
-            (null? vdefs)
-            (if (null? (cdr body)) (car body) (cons 'begin body))
-            `((lambda (,(caar vdefs)) ,(inner (cdr vdefs))) ,(caar vdefs))))
+  (define (inner vdefs)
+    (if (null? vdefs)
+        (if (null? (cdr body)) (car body) (cons 'begin body))
+        `((lambda (,(caar vdefs)) ,(inner (cdr vdefs))) ,(caar vdefs))))
     `((lambda ()
-        (define (,sym ,@(map1 car vdefs)) ,(inner vdefs))
-        (,sym ,@(map1 cadr vdefs)))))
+       (define (,sym ,@(map1 car vdefs)) ,(inner vdefs))
+       (,sym ,@(map1 cadr vdefs)))))
 
 ;; }}}
 ;; {{{ letrec
@@ -389,102 +357,92 @@
     (eval (letrec$ __special_letrec_vdefs__ __special_letrec_body__) 1))
 
 (define (letrec$ vdefs body)
-    (if
-        (eq? (type vdefs) 'symbol)
-        (letrec$3 vdefs (car body) (cdr body))
-        (letrec$2 vdefs body)))
+  (if (eq? (type vdefs) 'symbol)
+      (letrec$3 vdefs (car body) (cdr body))
+      (letrec$2 vdefs body)))
 
 (define (letrec$2 vdefs body)
-    `((lambda ()
-        ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
-        ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
-        ,@body)))
+  `((lambda ()
+      ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
+      ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
+      ,@body)))
 
 (define (letrec$3 sym vdefs body)
-    `((lambda ()
-        ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
-        ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
-        (define (,sym ,@(map1 car vdefs)) ,@body)
-        (,sym ,@(map1 cadr vdefs)))))
+  `((lambda ()
+      ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
+      ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
+      (define (,sym ,@(map1 car vdefs)) ,@body)
+      (,sym ,@(map1 cadr vdefs)))))
 
 ;; }}}
 ;; {{{ associative table
 
 (define (table compare)
-    (define items ())
-    (define (table$find items key compare)
-        (if
-          (null? items)
-          ()
-          (if
-              (compare (car (car items)) key)
-              (table$find (cdr items) key compare)
-              (car items))))
-    (define (table$delete items key compare)
-        (define prev ())
-        (define (helper assoc)
-            (if
-                (null? assoc)
-                items
-                (if
-                    (compare (car (car assoc)) key)
-                    (begin (set! prev assoc) (helper (cdr assoc)))
-                    (if
-                        (null? prev)
-                        (cdr assoc)
-                        (begin (set-cdr! prev (cdr assoc)) items)))))
-        (helper items))
-    (define (dispatch m . args)
-        (cond
-            ((eq? m 'get) (table$find items (car args) compare))
-            ((eq? m 'set)
-                (define key (car args))
-                (define value (cadr args))
-                (define node (table$find items key compare))
-                (if
-                    (null? node)
+  (define items ())
+  (define (table$find items key compare)
+    (if (null? items)
+        ()
+        (if (compare (car (car items)) key)
+            (table$find (cdr items) key compare)
+            (car items))))
+  (define (table$delete items key compare)
+      (define prev ())
+      (define (helper assoc)
+        (if (null? assoc)
+            items
+            (if (compare (car (car assoc)) key)
+                (begin (set! prev assoc) (helper (cdr assoc)))
+                (if (null? prev)
+                    (cdr assoc)
+                    (begin (set-cdr! prev (cdr assoc)) items)))))
+    (helper items))
+  (define (dispatch m . args)
+    (cond ((eq? m 'get) (table$find items (car args) compare))
+          ((eq? m 'set)
+            (define key (car args))
+            (define value (cadr args))
+            (define node (table$find items key compare))
+            (if (null? node)
+                (set! items (cons (cons key value) items))
+                (set-cdr! node value)))
+          ((eq? m 'del) (set! items (table$delete items (car args) compare)))
+          ((eq? m 'known) (table$find items (car args) compare))
+          ((eq? m 'setdefault)
+            (define key (car args))
+            (define value (cadr args))
+            (define node (table$find items key compare))
+              (if (null? node)
+                  (begin
                     (set! items (cons (cons key value) items))
-                    (set-cdr! node value)))
-            ((eq? m 'del) (set! items (table$delete items (car args) compare)))
-            ((eq? m 'known) (table$find items (car args) compare))
-            ((eq? m 'setdefault)
-                (define key (car args))
-                (define value (cadr args))
-                (define node (table$find items key compare))
-                (if
-                    (null? node)
+                    value)
+                  (cdr node)))
+          ((eq? m 'empty?) (null? items))
+          ((eq? m 'iter)
+            (let ((lst items))
+              (lambda ()
+                (if (null? lst)
+                    ()
                     (begin
-                        (set! items (cons (cons key value) items))
-                        value)
-                    (cdr node)))
-            ((eq? m 'empty?) (null? items))
-            ((eq? m 'iter)
-                (let ((lst items))
-                    (lambda ()
-                        (if
-                            (null? lst)
-                            ()
-                            (begin
-                                (define ret (car lst))
-                                (set! lst (cdr lst))
-                                ret)))))
-            ((eq? m 'len) (length items))
-            ((eq? m 'raw) items)
-            (#t (error "unknown method"))))
-    dispatch)
+                      (define ret (car lst))
+                      (set! lst (cdr lst))
+                      ret)))))
+          ((eq? m 'len) (length items))
+          ((eq? m 'raw) items)
+          (#t (error "unknown method"))))
+  dispatch)
 
 ;; }}}
 ;; {{{ last
 
 (define (last lst)
-    (if
-        (null? lst)
-        (error "(last) needs a nonempty list")
-        (let loop ((first (car lst)) (rest (cdr lst)))
-            (if
-                (null? rest)
-                first
-                (loop (car rest) (cdr rest))))))
+  (if (null? lst)
+      (error "(last) needs a nonempty list")
+      (let loop
+            ((first (car lst))
+             (rest (cdr lst)))
+        (if (null? rest)
+            first
+            (loop (car rest) (cdr rest))))))
 
 ;; }}}
 ;; {{{ loop, loop-with-break, for, while, foreach
@@ -493,104 +451,92 @@
 (define (loop f) (f) (loop f))
 
 (define (loop-with-break f)
-    (define (break) (c ()))
-    (define c (call/cc))
-    (if
-        c
-        (begin
-            (define c2 (call/cc))
-            (f break)
-            (c2 c2)
-        )
-        ()))
+  (define (break) (c ()))
+  (define c (call/cc))
+  (if c
+      (begin
+        (define c2 (call/cc))
+        (f break)
+        (c2 c2))
+      ()))
 
 (define (while f) (if (f) (while f) ()))
 
 ;; call f a given number of times as (f counter)
 (define (for f start stop step)
-    (define op <)
-    (define (for$ start)
-        (if
-            (op start stop)
-            (begin
-                (f start)
-                (for$ (- start (- step))))))
+  (define op <)
+  (define (for$ start)
+    (if (op start stop)
+        (begin
+          (f start)
+          (for$ (- start (- step))))))
     (cond
         ((equal? start stop) ())
         ((< 0 step)
-            (if
-                (< stop start)
-                (error "bad step")))
+          (if (< stop start)
+              (error "bad step")))
         ((< step 0)
-            (if
-                (< start stop)
-                (error "bad step")
-                (set! op >)))
+          (if (< start stop)
+              (error "bad step")
+              (set! op >)))
         (#t (error "step must be nonzero")))
-    (for$ start))
+  (for$ start))
 
 (define (for f start stop step)
-    (define op <)
-    (define (for$ start)
-        (if
-            (op start stop)
-            (begin
-                (f start)
-                (for$ (- start (- step))))))
+  (define op <)
+  (define (for$ start)
+    (if (op start stop)
+          (begin
+            (f start)
+            (for$ (- start (- step))))))
     (cond
         ((< 0 step)
-            (if
-                (< stop start)
-                (error "bad step")))
+          (if (< stop start)
+              (error "bad step")))
         ((< step 0)
-            (if
-                (< start stop)
-                (error "bad step")
-                (set! op >)))
+          (if (< start stop)
+              (error "bad step")
+              (set! op >)))
         (#t (error "step must be nonzero")))
-    (for$ start))
+  (for$ start))
 
 (define (foreach f lst)
-    (define (loop f _ lst)
-        (if
-            (null? lst)
-            ()
-            (loop f (f (car lst)) (cdr lst))
-        ))
-    (loop f () lst))
+  (define (loop f _ lst)
+    (if (null? lst)
+        ()
+        (loop f (f (car lst)) (cdr lst))))
+  (loop f () lst))
 
 ;; }}}
 ;; {{{ iterate (compose with itself) a function
 
 (define (iter-func f x0 n)
-    (if (< n 1) x0 (iter-func f (f x0) (- n 1)))
+  (if (< n 1) x0 (iter-func f (f x0) (- n 1)))
 )
 
 ;; }}}
 ;; {{{ benchmarking
 
 (define (timeit f n)
-    (define (loop i)
-        (if (< i n) (begin (f i) (loop (- i -1))) ()))
-    (define t0 (time 'time))
-    (loop 0)
-    (define t1 (time 'time))
-    (define dt (- t1 t0))
-    (if (< dt 1e-7) (set! dt 1e-7) ())
-    (if (< n 1) (set! n 1) ())
-    (list n dt (* 1e6 (/ dt n)) (/ n dt)))
+  (define (loop i)
+    (if (< i n) (begin (f i) (loop (- i -1))) ()))
+  (define t0 (time 'time))
+  (loop 0)
+  (define t1 (time 'time))
+  (define dt (- t1 t0))
+  (if (< dt 1e-7) (set! dt 1e-7) ())
+  (if (< n 1) (set! n 1) ())
+  (list n dt (* 1e6 (/ dt n)) (/ n dt)))
 
 ;; }}}
 ;; {{{ gcd
 
 (define (gcd x y)
-    (define (gcd$ x y)
-        (if
-            (equal? y 0)
-            x
-            (gcd$ y (% x y))))
-    (cond
-        ((lt? x y) (gcd y x))
+  (define (gcd$ x y)
+    (if (equal? y 0)
+        x
+        (gcd$ y (% x y))))
+  (cond ((lt? x y) (gcd y x))
         ((equal? x 0) 1)
         (#t (gcd$ x y))))
 
