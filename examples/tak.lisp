@@ -42,14 +42,11 @@
     (trap (ctak-aux x y z) (lambda (ret _) ret)))
 
 (define (ctak-aux x y z)
-    (if
-        (not (< y x))
-        (error z)
-        (ctak-aux
-            (trap (ctak-aux (- x 1) y z) (lambda (ret _) ret))
-            (trap (ctak-aux (- y 1) z x) (lambda (ret _) ret))
-            (trap (ctak-aux (- z 1) x y) (lambda (ret _) ret)))))
-
+  (if (not (< y x))
+      (error z)
+      (ctak-aux (trap (ctak-aux (- x 1) y z) (lambda (ret _) ret))
+                (trap (ctak-aux (- y 1) z x) (lambda (ret _) ret))
+                (trap (ctak-aux (- z 1) x y) (lambda (ret _) ret)))))
 
 (timeit (lambda (_) (print (ctak 18 12 6))) 1)
 
@@ -60,52 +57,49 @@
 (define null null?)
 
 (define (listn n)
-    (if (= 0 n) () (cons n (listn (1- n)))))
+  (if (= 0 n) () (cons n (listn (1- n)))))
 
 (define 18l (listn 18))
 (define 12l (listn 12))
 (define  6l (listn 6))
 
 (define (mas x y z)
-    (if (shorterp y x)
-        (mas
-            (mas (cdr x) y z)
-            (mas (cdr y) z x)
-            (mas (cdr z) x y))
-        z))
+  (if (shorterp y x)
+      (mas
+        (mas (cdr x) y z)
+        (mas (cdr y) z x)
+        (mas (cdr z) x y))
+      z))
 
 (define (ltak x y z)
-    (car (mas x y z)))
+  (car (mas x y z)))
 
 ;; 5.7 sec
 (define (shorterp x y)
-    (if
-        y
-        (if
-            (null? x)
-            #t
-            (shorterp (cdr x) (cdr y)))
-        ()))
+  (if y
+      (if (null? x)
+          #t
+          (shorterp (cdr x) (cdr y)))
+      ()))
 
 ;; 5.9 sec
 (define (shorterp x y)
-    (and y (or (null? x) (shorterp (cdr x) (cdr y)))))
+  (and y (or (null? x) (shorterp (cdr x) (cdr y)))))
 
 (define 2l (listn 2))
 (timeit (lambda (_) (print (ltak 12l 6l 2l))) 1)
 (timeit (lambda (_) (print (ltak 18l 12l 6l))) 1)
-
 
 ;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
 (define (takf x y z) (takfsub takfsub x y z))
 
 (define (takfsub f x y z)
-    (if (< y x)
-        (f f (f f (1- x) y z)
-             (f f (1- y) z x)
-             (f f (1- z) x y))
-        z))
+  (if (< y x)
+      (f f (f f (1- x) y z)
+           (f f (1- y) z x)
+           (f f (1- z) x y))
+      z))
 
 ;; 36.8 sec
 (timeit (lambda (_) (print (takf 18 12 6))) 1)
@@ -116,24 +110,23 @@
 (define (stak x y z) (stak-aux))
 
 (special (stak-aux)
-    (if (< y x)
-        (let ((x (let ((x (1- x))
-                       (y y)
-                       (z z))
-                       (stak-aux)))
-              (y (let ((x (1- y))
-                       (y z)
-                       (z x))
-                       (stak-aux)))
-              (z (let ((x (1- z))
-                       (y x)
-                       (z y))
-                       (stak-aux))))
-            (stak-aux))
-        z))
+  (if (< y x)
+      (let ((x (let ((x (1- x))
+                     (y y)
+                     (z z))
+                 (stak-aux)))
+            (y (let ((x (1- y))
+                     (y z)
+                     (z x))
+                 (stak-aux)))
+            (z (let ((x (1- z))
+                     (y x)
+                     (z y))
+                 (stak-aux))))
+          (stak-aux))
+      z))
 
 ;; 34.4 sec
 (timeit (lambda (_) (print (stak 18 12 6))) 1)
-
 
 ;; EOF

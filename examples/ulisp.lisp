@@ -13,9 +13,9 @@
 
 
 (define (fib n)
-    (if (< n 3)
-        1
-        (+ (fib (- n 1)) (fib (- n 2)))))
+  (if (< n 3)
+      1
+      (+ (fib (- n 1)) (fib (- n 2)))))
 
 ;; 30.5sec on arduino 2560 to return 28657
 (timeit (lambda (_) (print (fib 23))) 1)
@@ -24,9 +24,8 @@
 
 (define (q n)
   (if (<= n 2) 1
-    (+
-     (q (- n (q (- n 1))))
-     (q (- n (q (- n 2)))))))
+      (+ (q (- n (q (- n 1))))
+         (q (- n (q (- n 2)))))))
 
 ;; 58.2 on arduino 2560 to return 12
 (timeit (lambda (_) (print (q 21))) 1)
@@ -37,8 +36,8 @@
 
 (define (q2 x y)
   (if (or (< x 1) (< y 1)) 1
-    (+ (q2 (- x (q2 (1- x) y)) y)
-       (q2 x (- y (q2 x (1- y)))))))
+      (+ (q2 (- x (q2 (1- x) y)) y)
+         (q2 x (- y (q2 x (1- y)))))))
 
 ;; 113sec on arduino 2560 to return 31
 (timeit (lambda (_) (print (q2 7 8))) 1)
@@ -48,17 +47,14 @@
 (define mod %)
 
 (define (factor n)
-  (cond
-   ((zerop (mod n 2)) 2)
-   ((zerop (mod n 3)) 3)
-   (#t (let loop ((d 5) (i 2))
-        (if
-            (> (* d d) n)
-            n
-            (if
-                (zerop (mod n d))
-                d
-                (loop (+ d i) (- 6 i))))))))
+  (cond ((zerop (mod n 2)) 2)
+        ((zerop (mod n 3)) 3)
+        (#t (let loop ((d 5) (i 2))
+          (if (> (* d d) n)
+              n
+              (if (zerop (mod n d))
+                  d
+                  (loop (+ d i) (- 6 i))))))))
 
 ;; 3.9sec on arduino 2560 to return 2142142141
 (timeit (lambda (_) (print (factor 2142142141))) 1)

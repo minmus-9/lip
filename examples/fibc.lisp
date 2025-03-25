@@ -19,9 +19,9 @@
       (if (zero? (pred x))
           (c 1)
           (addc (call-with-current-continuation
-                 (lambda (c) (fibc (pred x) c)))
+                  (lambda (c) (fibc (pred x) c)))
                 (call-with-current-continuation
-                 (lambda (c) (fibc (pred (pred x)) c)))
+                  (lambda (c) (fibc (pred (pred x)) c)))
                 c))))
 
 ;; lip driver
