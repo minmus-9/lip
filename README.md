@@ -96,9 +96,11 @@ macro system in this LISP, just quasiquote.
 |`(eval obj n_up)`|evaluate `obj` up `n_up` namespaces|
 |`(exit obj)`|raise `SystemExit` with the given `obj`|
 |`(< n1 n2)`|return `#t` if `n1` < `n2` else `()`|
+|`(list ...)`|construct list from arguments|
 |`(* n1 n2)`|return `n1 * n2`|
 |`(nand n1 n2)`|return `~(n1 & n2)`|
 |`(null? x)`|return `#t` if x is `()` else `()`|
+|`(pair? x)`|return `#t` if x is a pair, else `()`|
 |`(print ...)`|print a list of objects space-separated followed by a newline|
 |`(range start stop step)`|same as the python function but return a list|
 |`(set-car! pair value)`|set the car of a pair|
@@ -143,7 +145,6 @@ The `lisp.lisp` standard library defines a bunch of procedures in LISP:
 |`(let ((var value) ...) body)`|same as `((lambda (vars) body) values)`|
 |`(let* ((var value ...) body)`|same but each `value` can access preceding `vars`|
 |`(letrec ((var value) ...) body)`|same but all vars are pre-declared|
-|`(list . args)`|create a list from args|
 |`(loop f)`|infinite loop calling `(f)`|
 |`(loop-with-break f)`|infinite loop calling `(f break)`, use `(break)` to terminate loop|
 |`(lshift x n)`|bitwise left shift `x` by `n` bits|
@@ -151,7 +152,6 @@ The `lisp.lisp` standard library defines a bunch of procedures in LISP:
 |`(map1 f list)`|return list of `(f x)` for each `x` in `list`|
 |`(not x)`|logical negation of `x`|
 |`(or ...)`|logical-or of args|
-|`(pair? x)`|return `#t` if `x` is a pair else `()`|
 |`(queue)`|create a queue, see `lisp.lisp`|
 |`(reverse list)`|return a reversed copy of `list`|
 |`(rshift x n)`|bitwise right shift `x` by `n` bits|

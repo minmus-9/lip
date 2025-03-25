@@ -94,9 +94,10 @@
 ;; {{{ assert
 
 (special (assert __special_assert_sexpr__)
-  (if (eval __special_assert_sexpr__ 1)
-      ()
-      (error (obj>string __special_assert_sexpr__))))
+    ;; extra indentation for (special) body...
+    (if (eval __special_assert_sexpr__ 1)
+        ()
+        (error (obj>string __special_assert_sexpr__))))
 
 ;; }}}
 ;; {{{ reverse

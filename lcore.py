@@ -623,6 +623,8 @@ class ListBuilder:
     def cons_tail(self, x):
         if self.h is EL:
             raise SyntaxError("saw . at start of list")
+        if self.t[1] is not EL:
+            raise SyntaxError("ambiguous use of '.'")
         self.t[1] = x
 
     def empty(self):

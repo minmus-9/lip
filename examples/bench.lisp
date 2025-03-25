@@ -23,7 +23,11 @@
       accum
       (umul (/ x 2)
             (+ y y)
-            (- accum (- 0 (if (equal? (nand x 1) -2) y 0))))))
+            (- accum
+               (- 0 (if
+                        (equal? (nand x 1) -2)
+                        y
+                        0))))))
 
 (define (smul x y)
   (define sign
