@@ -1,4 +1,7 @@
-;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/sum.scm
+;;;; sum runs of integers from 0 to n
+
+;;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/sum.scm
+
 ;;; SUM -- Compute sum of integers from 0 to 10000
 
 (define (run n)
@@ -7,7 +10,7 @@
         sum
         (loop (- i 1) (+ i sum)))))
 
-;; the rest of these are mine for benchmarking
+;;; the rest of these are mine for benchmarking
 
 (define (run2 n)
  ((lambda (loop) (loop loop n 0))
@@ -51,4 +54,4 @@
 (timeit (lambda (_) (print (run5 reps))) 1)
 (timeit (lambda (_) (print (run6 reps))) 1)
 
-;; EOF
+;;;; EOF

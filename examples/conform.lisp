@@ -1,4 +1,5 @@
-;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/conform.scm
+;;;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/conform.scm
+
 ;;; CONFORM -- Type checker, written by Jim Miller.
 
 (define (sort-list obj pred)
@@ -26,7 +27,7 @@
 (timeit (lambda (_) (sort-list items <)) 1)
 
 
-;;;
+
 
 
 (define (memq element lst)
@@ -59,6 +60,4 @@
 (define items (range 1 300 1))
 (timeit (lambda (_) (union items items)) 1)
 
-;;;
-
-
+;;;; EOF

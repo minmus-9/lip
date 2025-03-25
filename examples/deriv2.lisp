@@ -1,4 +1,4 @@
-;; from https://www.dreamsongs.com/Files/Timrep.pdf
+;;;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
 (define (atom x) (or (atom? x) (eq? (type x) 'integer)))
 (define eq eq?)
@@ -29,3 +29,5 @@
                            (print '(+ (* 3 x x) (* a x x) (* b x) 5))
                     (print (deriv '(+ (* 3 x x) (* a x x) (* b x) 5)))
 (timeit (lambda (_) (deriv '(+ (* 3 x x) (* a x x) (* b x) 5))) 5000)
+
+;;;; EOF

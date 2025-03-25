@@ -1,4 +1,6 @@
-;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/tak.scm
+;;;; takeuchi function from various places
+
+;;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/tak.scm
 ;;; TAK -- A vanilla version of the TAKeuchi function.
 
 (define (tak x y z)
@@ -128,4 +130,4 @@
 ;; 34.4 sec
 (timeit (lambda (_) (print (stak 18 12 6))) 1)
 
-;; EOF
+;;;; EOF

@@ -1,4 +1,4 @@
-;; from https://www.dreamsongs.com/Files/Timrep.pdf
+;;;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
 (define (atom x) (or (atom? x) (eq? (type x) 'integer)))
 (define eq eq?)
@@ -40,3 +40,5 @@
 
 (timeit (lambda (_) (iterative-div2 ll)) 1000)
 (timeit (lambda (_) (recursive-div2 ll)) 1000)
+
+;;;; EOF

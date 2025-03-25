@@ -1,4 +1,5 @@
-;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/primes.scm
+;;;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/primes.scm
+
 ;;; PRIMES -- Compute primes less than n, written by Eric Mohr.
 
 (define remainder mod)
@@ -28,4 +29,4 @@
 (print (primes<= 100))
 (timeit (lambda (_) (primes<= 1000)) 1)
 
-;; EOF
+;;;; EOF

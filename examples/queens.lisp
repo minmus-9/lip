@@ -1,4 +1,5 @@
-;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/nqueens.scm
+;;;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/nqueens.scm
+
 ;;; NQUEENS -- Compute number of solutions to 8-queens problem.
 
 (define append join)  ; lip doesn't define this
@@ -25,3 +26,5 @@
   (my-try (iota1 n) '() '()))
 
 (timeit (lambda (_) (nqueens 8)) 1)
+
+;;;; EOF

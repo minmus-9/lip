@@ -1,5 +1,4 @@
-;; from sicp
-;;
+;;;; from sicp
 
 (define (memo-proc proc)
   (let ((already-run? ())
@@ -117,3 +116,5 @@
     10))
 
 ;(stream-sink print fibs)
+
+;;;; EOF

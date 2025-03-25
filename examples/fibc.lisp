@@ -1,4 +1,5 @@
-;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/fibc.scm
+;;;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/fibc.scm
+
 ;;; FIBC -- FIB using first-class continuations, written by Kent Dybvig
 
 (define (zero? x) (equal? x 0))  ;; missing from lip
@@ -29,4 +30,4 @@
 
 (timeit (lambda (_) (fib 20)) 1)
 
-;; EOF
+;;;; EOF

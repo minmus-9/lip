@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; calculate pi - can't remember where this came from
+;;;; calculate pi - can't remember where this came from
 
 (define (pi1 _)
   (define z 1)
@@ -51,3 +51,5 @@
 )
 
 (timeit pi2 100)
+
+;;;; EOF

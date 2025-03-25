@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; prime sieve - can't remember where i found this
+;;;; prime sieve - can't remember where i found this
 
 (define (primes)
   (define pl '(2))
@@ -34,3 +34,5 @@
 (define g (primes))
 (define (h _) (print (g)))
 (for h 1 20 1)
+
+;;;; EOF

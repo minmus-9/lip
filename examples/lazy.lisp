@@ -1,4 +1,4 @@
-;; from sicp
+;;;; from sicp
 
 ((lambda (n)
     ((lambda (fact) (fact fact n))
@@ -47,3 +47,5 @@
 ;(list-ref integers 17)
 
 (list-ref integers 10)
+
+;;;; EOF

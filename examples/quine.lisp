@@ -1,11 +1,11 @@
-;; from https://okmij.org/ftp/meta-programming/Quines.html
+;;;; quines from various places
+
+;;; from https://okmij.org/ftp/meta-programming/Quines.html
 
 (define (ff) ((lambda (f) `(,f ',f)) '(lambda (f) `(,f ',f))))
 
 (print ff)
 (print (eval ff))
-
-;;
 
 (define (ff1)
   ((lambda (g) `(,g (,`quasiquote ,g))) 
@@ -17,7 +17,7 @@
 
 
 
-;; from https://literateprograms.org/quine__lisp_.html
+;;; from https://literateprograms.org/quine__lisp_.html
 (print)
 (define (f)
   ((lambda (x) (list x (list 'quote x))) '(lambda (x) (list x (list 'quote x)))))
@@ -27,7 +27,7 @@
 
 
 
-;; from https://www.nyx.net/~gthompso/self_lisp.txt
+;;; from https://www.nyx.net/~gthompso/self_lisp.txt
 (print)
 (define (f)
   (let ((a '(list 'let (list (list 'a (list 'quote a))) a))) (list 'let (list (list 'a (list 'quote a))) a)))
@@ -72,7 +72,7 @@
 (print f)
 (print (eval f))
 
-;; note from source page: Author: John McCarthy(creator of the language) and Carolyn Talcott
+;;; note from source page: Author: John McCarthy(creator of the language) and Carolyn Talcott
 
 (print)
 (define (f)
@@ -124,3 +124,5 @@
 
 (print f)
 (print (eval f))
+
+;;;; EOF

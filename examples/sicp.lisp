@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; sicp.lisp - some stuff from early in the sicp book
+;;;; sicp.lisp - some stuff from early in the sicp book
 
 ;;; exercise 1.4 p.27
 (define (a-plus-abs-b a b)
@@ -143,4 +143,4 @@
 (kar (kons 11 42))
 (kdr (kons 11 42))
 
-;;; 
+;;;; EOF

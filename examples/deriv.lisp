@@ -1,4 +1,4 @@
-;; from sicp
+;;;; from sicp
 
 (define (deriv exp var)
   (cond ((number? exp) 0)
@@ -63,3 +63,5 @@
 
 (deriv '(* (* x y) (+ x 3)) 'x)
 (timeit (lambda (_) (deriv '(* (* x y) (+ x 3)) 'x)) 1000)
+
+;;;; EOF

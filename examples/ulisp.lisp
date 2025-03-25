@@ -1,4 +1,4 @@
-;; from http://www.ulisp.com/show?1EO1
+;;;; from http://www.ulisp.com/show?1EO1
 
 (define (tak x y z)
   (if (not (< y x))
@@ -68,3 +68,5 @@
 
 ;; no timing given to produce (3 17 43 333667)
 (timeit (lambda (_) (print (factorize 731731731))) 1)
+
+;;;; EOF
