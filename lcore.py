@@ -33,7 +33,7 @@ optimizing. Also, using pairs for the stack is a lot faster than the more
 obvious list.append()/lisp.pop() function calls.
 """
 
-## pylint: disable=invalid-name
+## pylint: disable=invalid-name,too-many-lines
 ## XXX pylint: disable=missing-docstring
 
 import locale
@@ -169,8 +169,7 @@ def set_cdr(x, y):
 ## {{{ environment
 
 
-def create_environment(ctx, params, args, parent):
-    p0, a0 = params, args
+def create_environment(params, args, parent):
     t = {SENTINEL: parent}
     try:
         while params is not EL:
@@ -178,17 +177,24 @@ def create_environment(ctx, params, args, parent):
             if p.__class__ is not Symbol:
                 raise SyntaxError("expected symbol, got {p!r}")
             t[p], args = args
-        else:
-            if args is not EL:
-                raise SyntaxError("too many args")
+        if args is not EL:
+            raise SyntaxError("too many args")
         return t
     except TypeError:
         if params.__class__ is Symbol:
+            ## if the param list is (x y . args) we'll get here with params
+            ## eq symbol("args") because params won't be a proper list
+            ## proper 
             t[params] = args
             return t
+        ## no, that wasn't it, maybe args is empty?
         if args is EL:
             raise SyntaxError("not enough args") from None
-        raise SyntaxError("expected symbol, got {params!r}") from None
+        if args.__class__ is list:
+            ## params isn't a symbol.
+            raise SyntaxError("expected symbol, got {params!r}") from None
+        ## args is neither a list nor EL.
+        raise SyntaxError("malformed argument list")
 
 
 ## }}}
@@ -258,7 +264,7 @@ class Context:
         ## special sym
         self.dot = symbol(".")  ## for (1 . 2) and variadic param list
         ## global env
-        genv = self.g = create_environment(self, EL, EL, SENTINEL)
+        genv = self.g = create_environment(EL, EL, SENTINEL)
         genv[symbol("#t")] = T
         for k, v in G__.items():
             genv[symbol(k)] = v
@@ -278,12 +284,16 @@ class Context:
         self.env = self.g if env is SENTINEL else env
         try:
             return self.trampoline(k_leval)
-        except:
+        except:  ## pylint: disable=bare-except
             ## clear the stack. we have a propagating exception from some
             ## internal error, (error), (exit), or (eval). there's no way
             ## to go back because we're off the trampoline now, so get set
             ## up for the next call. if you're using a Parser, you'll need
             ## to create a new one.
+            ##
+            ## note that (trap) calls leval(). it caches the ctx state while
+            ## it calls leval() and restores it if there's an error -- so
+            ## resetting the stack here doesn't hurt anything.
             self.s = EL
             raise
 
@@ -393,7 +403,7 @@ def create_continuation(ctx):
 def create_lambda(params, body, env):
     def lcall(ctx):
         parent = ctx.env if lcall.special else env
-        ctx.env = create_environment(ctx, params, ctx.argl, parent)
+        ctx.env = create_environment(params, ctx.argl, parent)
         ctx.exp = body
         return k_leval
 

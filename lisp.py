@@ -424,18 +424,20 @@ def k_op_trap(ctx):
     expr = ctx.pop()
     ctx.pop_ce()  ## have to reset stack to way it was before op_trap()...
     state = ctx.save()  ## ... ok, we're good to go
+    ctx.push_ce()  ## oops, we need this back :-)
     try:
-        ctx.push_ce()  ## oops, we need this back :-)
         res = ctx.leval(expr, ctx.env)
-        ctx.pop_ce()  ## ok, restore cont and env (also val)
-        ctx.val = res  ## restored... now set val
-        return ctx.cont
     except Exception as e:  ## pylint: disable=broad-except
         ctx.restore(state)  ## unwind the stack back to here
         ## py err will have a string as args[0]; (error) has an object here...
         ## can't call py_to_lisp because it could be a lisp obj via (error)
         ctx.argl = cons(e.args[0], cons(expr, EL))
         return xhandler
+    else:
+        ## no exception occurred, proceed
+        ctx.pop_ce()  ## ok, restore cont and env (also val)
+        ctx.val = res  ## restored... now set val
+        return ctx.cont
 
 
 ## }}}
