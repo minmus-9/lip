@@ -1,30 +1,30 @@
-;; lisp.lisp - runtime for lisp.py
-;;
-;; lip - lisp in python
-;;       https://github.com/minmus-9/lip
-;; Copyright (C) 2025  Mark Hays (github:minmus-9)
-;; 
-;; This program is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
-;; 
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-;; 
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;;;; lisp.lisp - runtime for lisp.py
+;;;;
+;;;; lip - lisp in python
+;;;;       https://github.com/minmus-9/lip
+;;;; Copyright (C) 2025  Mark Hays (github:minmus-9)
+;;;; 
+;;;; This program is free software: you can redistribute it and/or modify
+;;;; it under the terms of the GNU General Public License as published by
+;;;; the Free Software Foundation, either version 3 of the License, or
+;;;; (at your option) any later version.
+;;;; 
+;;;; This program is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;;; GNU General Public License for more details.
+;;;; 
+;;;; You should have received a copy of the GNU General Public License
+;;;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; {{{ basics
+;;; {{{ basics
 
-;; to accompany quasiquote
+;;; to accompany quasiquote
 (define (unquote x) (error "cannot unquote here"))
 (define (unquote-splicing x) (error "cannot unquote-splicing here"))
 
-;; ditto
+;;; ditto
 (define (caar l) (car (car l)))
 (define (caaar l) (car (car (car l))))
 (define (caaaar l) (caar (caar l)))
@@ -38,30 +38,25 @@
 (define (cadddr l) (car (cdddr l)))
 (define (caddddr l) (car (cddddr l)))
 
-;; }}}
-;; {{{ bitwise ops
+;;; }}}
+;;; {{{ bitwise ops
 
-;; bitwise ops from nand
 (define (~ x)   (nand x x))
 (define (& x y) (~ (nand x y)))
 (define (| x y) (nand (~ x) (~ y)))
 (define (^ x y) (& (nand x y) (| x y)))
 
-;; }}}
-;; {{{ arithmetic
+;;; }}}
+;;; {{{ arithmetic
 
 (define (+ x y) (- x (- y)))
-
-;; oh, mod
 (define (mod n d) (- n (* d (/ n d))))
 
-;; absolute value
 (define (abs x)
   (if (< x 0)
       (- x)
       x))
 
-;; copysign
 (define (copysign x y)
   (if (< y 0)
       (- (abs x))
@@ -78,20 +73,20 @@
       x
       (rshift (/ x 2) (- n 1))))
 
-;; }}}
-;; {{{ not
+;;; }}}
+;;; {{{ not
 
 (define (not x) (if x () #t))
 
-;; }}}
-;; {{{ comparison predicates
+;;; }}}
+;;; {{{ comparison predicates
 
 (define (>= x y) (if (< x y) () #t))
 (define (>  x y) (< y x))
 (define (<= x y) (if (< y x) () #t))
 
-;; }}}
-;; {{{ assert
+;;; }}}
+;;; {{{ assert
 
 (special (assert __special_assert_sexpr__)
     ;; extra indentation for (special) body...
@@ -99,8 +94,8 @@
         ()
         (error (obj>string __special_assert_sexpr__))))
 
-;; }}}
-;; {{{ reverse
+;;; }}}
+;;; {{{ reverse
 
 (define (reverse l)
   (define (rev x y)
@@ -109,8 +104,8 @@
         (rev (cdr x) (cons (car x) y))))
   (rev l ()))
 
-;; }}}
-;; {{{ length
+;;; }}}
+;;; {{{ length
 
 (define (length lst)
   (define (iter l i)
@@ -119,9 +114,10 @@
         (iter (cdr l) (- i -1))))
   (iter lst 0))
 
-;; }}}
-;; {{{ fold, transpose, map
-;; sicp p.158-165 with interface tweaks
+;;; }}}
+;;; {{{ fold, transpose, map
+
+;;; sicp p.158-165 with interface tweaks
 (define (fold-left f x sequence)
   (if (null? sequence)
       x
@@ -137,10 +133,9 @@
 ;(fold-left  cons () (list 1 4 9))  ;; (9 4 1)    (cons 9 (cons 4 (cons 1 ())))
 ;(fold-right cons () (list 1 4 9))  ;; (1 4 9)    (cons 1 (cons 4 (cons 9 ())))
 
-;; not elegant like sicp -- but faster in this lisp
-(define (map1 f lst)
-  (define ret ())  ;; head of queue and return value
-  (define tail ())  ;; tail of queue
+(define (map1 f lst)  ; not elegant like sicp -- but faster in this lisp
+  (define ret ())     ; head of queue and return value
+  (define tail ())    ; tail of queue
   (define (map1$ lst)
     (if (null? lst)
         ret
@@ -229,8 +224,8 @@
 (define (map f . lists)
     (ftranspose (lambda (tuple) (apply f tuple)) lists))
 
-;; }}}
-;; {{{ queue
+;;; }}}
+;;; {{{ queue
 
 (define (queue)
   (define (unpack0 args)
@@ -286,8 +281,8 @@
           ((eq? m 'last) (car tail))))
   dispatch)
 
-;; }}}
-;; {{{ join
+;;; }}}
+;;; {{{ join
 
 (define (join x . lists)
   (define q (queue))
@@ -302,8 +297,8 @@
   (if (null? lists) x (j x lists))
 )
 
-;; }}}
-;; {{{ let
+;;; }}}
+;;; {{{ let
 
 (special (let __special_let_vdefs__ . __special_let_body__)
     (eval (let$ __special_let_vdefs__ __special_let_body__) 1))
@@ -323,8 +318,8 @@
      (define (,sym ,@(car xy)) ,@body)
      (,sym ,@(cdr xy))))
 
-;; }}}
-;; {{{ let*
+;;; }}}
+;;; {{{ let*
 
 (special (let* __special_lets_vdefs__ . __special_lets_body__)
     (eval (let*$ __special_lets_vdefs__ __special_lets_body__) 1))
@@ -350,9 +345,10 @@
        (define (,sym ,@(map1 car vdefs)) ,(inner vdefs))
        (,sym ,@(map1 cadr vdefs)))))
 
-;; }}}
-;; {{{ letrec
-;; i saw this (define x ()) ... (set! x value) on stackoverflow somewhere
+;;; }}}
+;;; {{{ letrec
+
+;;; i saw this (define x ()) ... (set! x value) on stackoverflow somewhere
 
 (special (letrec __special_letrec_vdefs__ . __special_letrec_body__)
     (eval (letrec$ __special_letrec_vdefs__ __special_letrec_body__) 1))
@@ -375,8 +371,8 @@
       (define (,sym ,@(map1 car vdefs)) ,@body)
       (,sym ,@(map1 cadr vdefs)))))
 
-;; }}}
-;; {{{ associative table
+;;; }}}
+;;; {{{ associative table
 
 (define (table compare)
   (define items ())
@@ -432,8 +428,8 @@
           (#t (error "unknown method"))))
   dispatch)
 
-;; }}}
-;; {{{ last
+;;; }}}
+;;; {{{ last
 
 (define (last lst)
   (if (null? lst)
@@ -445,12 +441,13 @@
             first
             (loop (car rest) (cdr rest))))))
 
-;; }}}
-;; {{{ loop, loop-with-break, for, while, foreach
+;;; }}}
+;;; {{{ loop, loop-with-break, for, while, foreach
 
 ;; call f in a loop forever
 (define (loop f) (f) (loop f))
 
+;; loop until user calls (break)
 (define (loop-with-break f)
   (define (break) (c ()))
   (define c (call/cc))
@@ -508,15 +505,15 @@
         (loop f (f (car lst)) (cdr lst))))
   (loop f () lst))
 
-;; }}}
-;; {{{ iterate (compose with itself) a function
+;;; }}}
+;;; {{{ iterate (compose with itself) a function
 
 (define (iter-func f x0 n)
   (if (< n 1) x0 (iter-func f (f x0) (- n 1)))
 )
 
-;; }}}
-;; {{{ benchmarking
+;;; }}}
+;;; {{{ benchmarking
 
 (define (timeit f n)
   (define (loop i)
@@ -529,8 +526,8 @@
   (if (< n 1) (set! n 1) ())
   (list n dt (* 1e6 (/ dt n)) (/ n dt)))
 
-;; }}}
-;; {{{ gcd
+;;; }}}
+;;; {{{ gcd
 
 (define (gcd x y)
   (define (gcd$ x y)
@@ -541,18 +538,18 @@
         ((equal? x 0) 1)
         (#t (gcd$ x y))))
 
-;; }}}
-;; {{{ misc
+;;; }}}
+;;; {{{ misc
 
 (special (no-op . args) ())  ;; replace no-op with begin to execute args
 
-;; }}}
-;; {{{ scheme-ish
+;;; }}}
+;;; {{{ scheme-ish
 
 (define = equal?)
 (define else #t)
 (define mapcar map1)
 
-;; }}}
+;;; }}}
 
-;; EOF
+;;; EOF
