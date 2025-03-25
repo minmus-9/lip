@@ -1,8 +1,6 @@
 ;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/conform.scm
 ;;; CONFORM -- Type checker, written by Jim Miller.
 
-(define else #t)
-
 (define (sort-list obj pred)
   (define (loop l)
     (if (and (pair? l) (pair? (cdr l)))

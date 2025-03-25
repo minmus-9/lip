@@ -16,7 +16,7 @@
       (set! l (cdr l))
       (if (null? l)
           ()
-          (if (equal? 0 (% i p))
+          (if (equal? 0 (mod i p))
               (begin (set! ok ()) ())
               (if (< i (* p p)) () #t))))
   (define (outer)

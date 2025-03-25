@@ -44,7 +44,6 @@
 
 
 (define (zerop x) (equal? x 0))
-(define mod %)
 
 (define (factor n)
   (cond ((zerop (mod n 2)) 2)
@@ -62,8 +61,6 @@
 (timeit (lambda (_) (print (factor 2146654199))) 1)
 
 
-
-(define = equal?)
 
 (define (factorize n)
   (let ((f (factor n)))

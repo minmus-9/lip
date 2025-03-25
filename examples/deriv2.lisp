@@ -3,10 +3,6 @@
 (define (atom x) (or (atom? x) (eq? (type x) 'integer)))
 (define eq eq?)
 (define t #t)
-(define (mapcar f L)
-    (if (null? L)
-        ()
-        (cons (f (car L)) (mapcar f (cdr L)))))
 
 (special (defun sym args . body)
  (eval `(define ,(cons sym args) ,@body) 1))

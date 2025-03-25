@@ -54,7 +54,7 @@
 (define (e x y)  ;; gcd
   (cond ((equal? y 0) x)
         ((equal? x 0) 1)
-        (#t (define r (% x y))
+        (#t (define r (mod x y))
             (e y r))))
 
 (define (two)

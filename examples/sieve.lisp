@@ -1,8 +1,7 @@
 ;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/primes.scm
 ;;; PRIMES -- Compute primes less than n, written by Eric Mohr.
 
-(define = equal?)  ;; lip is missing these
-(define remainder %)
+(define remainder mod)
 
 (define  (interval-list m n)
   (if (> m n)

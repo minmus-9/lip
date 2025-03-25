@@ -119,7 +119,6 @@ The `lisp.lisp` standard library defines a bunch of procedures in LISP:
 |Name|Description|
 |----|----|
 |`(+ x y)`|return `x + y`|
-|`(% n d)`|return `n` mod `d`|
 |`(& x y)`|bitwise and|
 |`(\| x y)`|bitwise or|
 |`(^ x y)`|bitwise exclusive-or|
@@ -150,6 +149,7 @@ The `lisp.lisp` standard library defines a bunch of procedures in LISP:
 |`(lshift x n)`|bitwise left shift `x` by `n` bits|
 |`(map f . lists)`|return list of `(f x y ...)` for each `x,y,...` in `(map1 car lists)` over `lists`|
 |`(map1 f list)`|return list of `(f x)` for each `x` in `list`|
+|`(mod n d)`|return `n` mod `d`|
 |`(not x)`|logical negation of `x`|
 |`(or ...)`|logical-or of args|
 |`(queue)`|create a queue, see `lisp.lisp`|

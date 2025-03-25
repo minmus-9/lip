@@ -52,7 +52,6 @@
 
 ;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
-(define = equal?)
 (define (1- x) (- x 1))
 (define null null?)
 

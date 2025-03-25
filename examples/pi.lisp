@@ -37,8 +37,8 @@
       (if (equal? d d1)
           (begin
             ;(print d)
-            (set! a  (* 10 (% a b)))
-            (set! a1 (* 10 (% a1 b1)))
+            (set! a  (* 10 (mod a b)))
+            (set! a1 (* 10 (mod a1 b1)))
             (set! d  (/ a b))
             (set! d1 (/ a1 b1))
             #t)

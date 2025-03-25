@@ -53,7 +53,7 @@
 (define (+ x y) (- x (- y)))
 
 ;; oh, mod
-(define (% n d) (- n (* d (/ n d))))
+(define (mod n d) (- n (* d (/ n d))))
 
 ;; absolute value
 (define (abs x)
@@ -536,7 +536,7 @@
   (define (gcd$ x y)
     (if (equal? y 0)
         x
-        (gcd$ y (% x y))))
+        (gcd$ y (mod x y))))
   (cond ((lt? x y) (gcd y x))
         ((equal? x 0) 1)
         (#t (gcd$ x y))))
@@ -545,6 +545,13 @@
 ;; {{{ misc
 
 (special (no-op . args) ())  ;; replace no-op with begin to execute args
+
+;; }}}
+;; {{{ scheme-ish
+
+(define = equal?)
+(define else #t)
+(define mapcar map1)
 
 ;; }}}
 

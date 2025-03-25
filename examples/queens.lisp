@@ -1,8 +1,7 @@
 ;; from https://github.com/ecraven/r7rs-benchmarks/blob/master/src/nqueens.scm
 ;;; NQUEENS -- Compute number of solutions to 8-queens problem.
 
-(define = equal?)  ;; lip is missing these two
-(define append join)
+(define append join)  ; lip doesn't define this
 
 (define (nqueens n)
   (define (iota1 n)

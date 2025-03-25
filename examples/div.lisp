@@ -3,13 +3,7 @@
 (define (atom x) (or (atom? x) (eq? (type x) 'integer)))
 (define eq eq?)
 (define t #t)
-(define = equal?)
 (define (1- x) (- x 1))
-(define (mapcar f L)
-  (if (null? L)
-    ()
-    (cons (f (car L)) (mapcar f (cdr L)))))
-(define (cddr l) (cdr (cdr l)))
 
 (special (defvar var . value)
     (if (null? (cdr value))
