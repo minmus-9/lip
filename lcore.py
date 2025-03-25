@@ -169,31 +169,32 @@ def set_cdr(x, y):
 ## {{{ environment
 
 
-def create_environment(params, args, parent):
+def create_environment(ctx, params, args, parent):
     t = {SENTINEL: parent}
+    dot = ctx.dot
+    variadic = False
     try:
         while params is not EL:
             p, params = params
             if p.__class__ is not Symbol:
                 raise SyntaxError("expected symbol, got {p!r}")
-            t[p], args = args
+            if p is dot:
+                variadic = True
+            elif variadic:
+                if params is not EL:
+                    raise SyntaxError("extra junk after dot")
+                t[p] = args
+                return t
+            else:
+                t[p], args = args
+        if variadic:
+            raise SyntaxError("params end with dot")
         if args is not EL:
             raise SyntaxError("too many args")
         return t
     except TypeError:
-        if params.__class__ is Symbol:
-            ## if the param list is (x y . args) we'll get here with params
-            ## eq symbol("args") because params won't be a proper list
-            ## proper 
-            t[params] = args
-            return t
-        ## no, that wasn't it, maybe args is empty?
         if args is EL:
             raise SyntaxError("not enough args") from None
-        if args.__class__ is list:
-            ## params isn't a symbol.
-            raise SyntaxError("expected symbol, got {params!r}") from None
-        ## args is neither a list nor EL.
         raise SyntaxError("malformed argument list")
 
 
@@ -250,7 +251,6 @@ class Context:
         "symbol",
         "g",
         "quot",
-        "var",
         "dot",
     )
 
@@ -262,9 +262,9 @@ class Context:
         ## symbols
         symbol = self.symbol = create_symbol_table()
         ## special sym
-        self.dot = symbol(".")  ## for (1 . 2) and variadic param list
+        self.dot = symbol(".")  ## for variadic param list
         ## global env
-        genv = self.g = create_environment(EL, EL, SENTINEL)
+        genv = self.g = create_environment(self, EL, EL, SENTINEL)
         genv[symbol("#t")] = T
         for k, v in G__.items():
             genv[symbol(k)] = v
@@ -403,7 +403,7 @@ def create_continuation(ctx):
 def create_lambda(params, body, env):
     def lcall(ctx):
         parent = ctx.env if lcall.special else env
-        ctx.env = create_environment(params, ctx.argl, parent)
+        ctx.env = create_environment(ctx, params, ctx.argl, parent)
         ctx.exp = body
         return k_leval
 
@@ -750,8 +750,6 @@ class Parser:
 
     def __init__(self, ctx, callback):
         self.ctx = ctx
-        self.dot = ctx.dot  ## symbol(".")
-        self.dstack = EL  ## stack of in-progress .-s
         self.callback = callback
         self.qt = ctx.quot  ## quotes and replacements
         self.pos = [0]  ## yup, a list, see feed() and S_COMMA code
@@ -778,8 +776,6 @@ class Parser:
                 raise SyntaxError(f"eof expecting {self.parens[0]!r}")
             if self.qstack is not EL:
                 raise SyntaxError("unclosed quasiquote")
-            if self.dstack is not EL:
-                raise SyntaxError("eof in . construct")
             return
         pos = self.pos
         n = len(text)
@@ -790,14 +786,8 @@ class Parser:
             p = pos[0] = pos[0] + 1  ## re-read in case of comma adjustment
 
     def append(self, x):
-        d = self.dstack
         if self.lstack is EL:
-            if d is not EL:
-                raise SyntaxError("got . at end of expr")
             self.callback(self.quote_wrap(x))
-        elif d is not EL and self.lstack[0] is d[0]:
-            d[0].cons_tail(self.quote_wrap(x))
-            self.dstack = d[1]
         else:
             self.lstack[0].append(self.quote_wrap(x))
 
@@ -813,15 +803,6 @@ class Parser:
         if self.token:
             t = "".join(self.token)
             self.token.clear()  ## faster than del[:]
-            if t == str(self.dot):
-                if self.lstack is EL:
-                    raise SyntaxError("saw . at start of expr expecting (")
-                if self.lstack[0].empty():
-                    raise SyntaxError("saw . at start of expr")
-                if self.dstack is not EL and self.dstack[0] is self.lstack[0]:
-                    raise SyntaxError("saw double dot")
-                self.dstack = [self.lstack[0], self.dstack]
-                return
             if t[0].lower() in "0123456789-.+abcdef":
                 try:
                     t = int(t, 0)
