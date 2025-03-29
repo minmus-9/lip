@@ -790,6 +790,32 @@ def op_setcdr(ctx):
     return binary(ctx, set_cdr)
 
 
+@glbl("string>number")
+def op_string_to_symbol(ctx):
+    s = ctx.unpack1()
+    if not isinstance(s, str):
+        raise TypeError("expected nonempty string")
+    try:
+        ctx.val = int(s, 0)
+    except ValueError:
+        try:
+            ctx.val = float(s)
+        except:  ## pylint: disable=bare-except
+            raise SyntaxError("cannot convert to number") from None
+    return ctx.cont
+
+
+@glbl("string>symbol")
+def op_string_to_symbol(ctx):
+    s = ctx.unpack1()
+    if not isinstance(s, str):
+        raise TypeError("expected nonempty string")
+    if not s:
+        raise TypeError("expected nonempty string")
+    ctx.val = ctx.symbol(s)
+    return ctx.cont
+
+
 @glbl("-")
 def op_sub(ctx):
     try:
@@ -879,6 +905,25 @@ def op_ffi_shuffle(args):
     (l,) = args
     random.shuffle(l)
     return l
+
+
+@ffi("string")
+def op_ffi_string(args):
+    op = args.pop(0)
+    if not isinstance(op, Symbol):
+        raise TypeError("expected symbol")
+    s = args.pop(0)
+    if not isinstance(s, str):
+        raise TypeError("expected string")
+    try:
+        x = getattr(s, str(op))
+    except AttributeError:
+        raise AttributeError("unknown string method") from None
+    if callable(x):
+        return x(*args)
+    if args:
+        raise TypeError("non-method takes no args")
+    return x
 
 
 @ffi("time")
