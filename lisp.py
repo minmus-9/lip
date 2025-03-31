@@ -20,7 +20,7 @@
 "lisp.py -- lcore demo"
 
 ## {{{ prologue
-## pylint: disable=invalid-name, too-many-lines
+## pylint: disable=invalid-name
 ## XXX pylint: disable=missing-docstring
 
 from lcore import (
@@ -782,15 +782,17 @@ def op_range(ctx):
 
 @glbl("read")
 def op_read(ctx):
-    ctx.push(ctx.save())
-    ctx.cont = k_op_read
-
-
-def k_op_read(ctx):
-    form = ctx.val
-    ctx.restore(ctx.pop())
-    ctx.val = form
-    return ctx.cont
+    ctx.rcont = ctx.save()
+    ctx.val = EL
+    ## returning land will cause leval() to return -> callback() returns to
+    ## feed() for the next round.
+    ##
+    ## on the next callback(), we'll hit leval() via the repl, ctx will get
+    ## restored, and we'll bounce to ctx.cont, which is the current value of
+    ## ctx.cont right here... ctx.val will be the new expression coming into
+    ## leval(). so our ctx.cont will be returning this new expression (which
+    ## is unevaluated) to the caller of (read).
+    return ctx.land
 
 
 @glbl("set-car!")
@@ -804,7 +806,7 @@ def op_setcdr(ctx):
 
 
 @glbl("string>number")
-def op_string_to_symbol(ctx):
+def op_string_to_number(ctx):
     s = ctx.unpack1()
     if not isinstance(s, str):
         raise TypeError("expected nonempty string")
@@ -821,9 +823,7 @@ def op_string_to_symbol(ctx):
 @glbl("string>symbol")
 def op_string_to_symbol(ctx):
     s = ctx.unpack1()
-    if not isinstance(s, str):
-        raise TypeError("expected nonempty string")
-    if not s:
+    if not (isinstance(s, str) and s):
         raise TypeError("expected nonempty string")
     ctx.val = ctx.symbol(s)
     return ctx.cont

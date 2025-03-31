@@ -195,7 +195,7 @@ def create_environment(ctx, params, args, parent):
     except TypeError:
         if args is EL:
             raise SyntaxError("not enough args") from None
-        raise SyntaxError("malformed argument list")
+        raise SyntaxError("malformed argument list") from None
 
 
 ## }}}
@@ -248,6 +248,7 @@ class Context:
         "exp",
         "val",
         "s",
+        "rcont",
         "symbol",
         "g",
         "quot",
@@ -259,6 +260,8 @@ class Context:
         self.argl = self.cont = self.env = self.exp = self.val = EL
         ## stack
         self.s = EL
+        ## read continuation
+        self.rcont = EL
         ## symbols
         symbol = self.symbol = create_symbol_table()
         ## special sym
@@ -279,17 +282,27 @@ class Context:
     ## top level
 
     def leval(self, x, env=SENTINEL):
-        self.cont = self.land
-        self.exp = x
-        self.env = self.g if env is SENTINEL else env
         try:
-            return self.trampoline(k_leval)
+            if self.rcont is EL:
+                ## route expr to k_leval
+                self.exp = x
+                self.env = self.g if env is SENTINEL else env
+                self.cont = self.land
+                return self.trampoline(k_leval)
+            ## someone called (read) and x is its result. jump back to where
+            ## we would have been if we weren't split-phase. see the op_read()
+            ## code in lisp.py for more comments.
+            self.restore(self.rcont)
+            self.rcont = EL
+            self.val = x
+            return self.trampoline(self.cont)
         except:  ## pylint: disable=bare-except
             ## clear the stack. we have a propagating exception from some
             ## internal error, (error), (exit), or (eval). there's no way
             ## to go back because we're off the trampoline now, so get set
-            ## up for the next call. if you're using a Parser, you'll need
-            ## to create a new one.
+            ## up for the next call.
+            ##
+            ## if you're using a Parser, you'll need to create a new one.
             ##
             ## note that (trap) calls leval(). it caches the ctx state while
             ## it calls leval() and restores it if there's an error -- so
@@ -371,10 +384,26 @@ class Context:
     ## state mgt
 
     def restore(self, x):
-        self.argl, self.cont, self.env, self.exp, self.val, self.s = x
+        (
+            self.argl,
+            self.cont,
+            self.env,
+            self.exp,
+            self.val,
+            self.s,
+            self.rcont,
+        ) = x
 
     def save(self):
-        return self.argl, self.cont, self.env, self.exp, self.val, self.s
+        return (
+            self.argl,
+            self.cont,
+            self.env,
+            self.exp,
+            self.val,
+            self.s,
+            self.rcont,
+        )
 
 
 ## }}}
@@ -817,7 +846,8 @@ class Parser:
 
     def do_sym(self, ch):
         ## pylint: disable=too-many-branches
-        if ch in "()[] \n\r\t;\"',`":  ## this and what follows is actually faster!
+        ## this and what follows is actually faster!
+        if ch in "()[] \n\r\t;\"',`":
             if ch in "([":
                 self.sym()
                 ## faster than a lut:
