@@ -12,23 +12,7 @@ below),
 - Has tail-call support, and
 - Has first-class continuations with unlimited extent.
 
-```
-(define (loop f)
-    (define c (call/cc (lambda (cc) cc)))
-    (f)
-    (c c))
-
-(define (loop f)
-    (f)
-    (loop f))
-
-(define (! n)
-    (define (iter product k)
-        (if (< k 2)  product  (iter (* product k) (- k 1))))
-    (iter 1 n))
-```
-
-It weighs in at ~1550 Python SLOC and ~500 LISP SLOC (for the standard
+It weighs in at ~1800 Python SLOC and ~550 LISP SLOC (for the standard
 library). This may seem like a lot, but there's a lot in there -- see
 "The Language" below.
 
