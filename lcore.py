@@ -771,7 +771,7 @@ class Parser:
         if text is None:
             self.sym()
             if self.state not in (self.S_SYM, self.S_COMMENT):
-                raise SyntaxError("eof in {self.state!r}")
+                raise SyntaxError(f"eof in {self.state!r}")
             if self.parens is not EL:
                 raise SyntaxError(f"eof expecting {self.parens[0]!r}")
             if self.qstack is not EL:

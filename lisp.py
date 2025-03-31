@@ -780,6 +780,19 @@ def op_range(ctx):
     return ctx.cont
 
 
+@glbl("read")
+def op_read(ctx):
+    ctx.push(ctx.save())
+    ctx.cont = k_op_read
+
+
+def k_op_read(ctx):
+    form = ctx.val
+    ctx.restore(ctx.pop())
+    ctx.val = form
+    return ctx.cont
+
+
 @glbl("set-car!")
 def op_setcar(ctx):
     return binary(ctx, set_car)
