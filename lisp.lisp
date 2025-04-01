@@ -550,6 +550,11 @@
 (define else #t)
 (define mapcar map1)
 
+(define (symbol? x) (eq? (type x) 'symbol))
+(define (integer? x) (eq? (type x) 'integer))
+(define (float? x) (eq? (type x) 'float))
+(define (string? x) (eq? (type x) 'string))
+
 ;;; }}}
 
 ;;; EOF

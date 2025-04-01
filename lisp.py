@@ -607,6 +607,41 @@ def op_cons(ctx):
     return binary(ctx, cons)
 
 
+@glbl("display")
+def op_display(ctx):
+    args = ctx.argl
+
+    if args is EL:
+        ctx.val = EL
+        return ctx.cont
+
+    arg, args = args
+
+    ctx.push(ctx.cont)
+    ctx.push(args)
+    ctx.exp = arg
+    ctx.cont = k_op_display
+    return k_stringify
+
+
+def k_op_display(ctx):
+    args = ctx.pop()
+
+    if args is EL:
+        print(ctx.val, end="")
+        ctx.val = EL
+        return ctx.pop()
+
+    print(ctx.val, end=" ")
+
+    arg, args = args
+
+    ctx.push(args)
+    ctx.exp = arg
+    ctx.cont = k_op_display
+    return k_stringify
+
+
 @glbl("/")
 def op_div(ctx):
     return binary(ctx, op_div_f)

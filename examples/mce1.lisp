@@ -16,8 +16,7 @@
         ((application? exp)
          (lapply (leval (operator exp) env)
                 (list-of-values (operands exp) env)))
-        (else
-          (error "unknown expression type" exp))))
+        (else (error "unknown expression type"))))
 
 (define (lapply procedure arguments)
   (cond ((primitive-procedure? procedure)
@@ -29,9 +28,7 @@
              (procedure-parameters procedure)
              arguments
              (procedure-environment procedure))))
-        (else
-          (error
-            "unknown procedure type" procedure))))
+        (else (error "unknown procedure type"))))
 
 (define (list-of-values exps env)
   (if (no-operands? exps)
@@ -41,8 +38,8 @@
 
 (define (eval-if exp env)
   (if (true? (leval (if-predicate exp) env))
-      (eval (if-consequent exp) env)
-      (eval (if-alternative exp) env)))
+      (leval (if-consequent exp) env)
+      (leval (if-alternative exp) env)))
 
 (define (eval-sequence exps env)
   (cond ((last-exp? exps)
@@ -81,7 +78,7 @@
 
 (define (assignment? exp) (tagged-list? exp 'set!))
 (define (assignment-variable exp) (cadr exp))
-(define (assigment-value exp) (caddr exp))
+(define (assignment-value exp) (caddr exp))
 
 (define (definition? exp) (tagged-list? exp 'define))
 (define (definition-variable exp)
@@ -95,8 +92,9 @@
                    (cddr exp))))
 (define (make-lambda parameters body)
   (cons 'lambda (cons parameters body)))
+(define (lambda? lam) (tagged-list? lam 'lambda))
 
-(define (if? exp) (tagged-list exp 'if))
+(define (if? exp) (tagged-list? exp 'if))
 (define (if-predicate exp) (cadr exp))
 (define (if-consequenct exp) (caddr exp))
 (define (if-alternative exp)
@@ -148,17 +146,10 @@
 (define (true? x) (not (eq? x false)))
 (define (false? x) (eq? x false))
 
-(define apply-primitive-procedure apply)
-(define (primitive-procedure? procedure)
-  (define t (type procedure))
-  (if (eq? (type procedure) 'primitive)
-      #t
-      ()))
-
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 (define (compound-procedure? procedure)
-  (tagged-list procedure 'procedure))
+  (tagged-list? procedure 'procedure))
 (define (procedure-parameters procedure) (cadr procedure))
 (define (procedure-body procedure) (caddr procedure))
 (define (procedure-environment procdure) (cadddr procedure))
@@ -188,7 +179,7 @@
             ((eq? var (car vars)) (car vals))
             (else (scan (cdr vars) (cdr vals)))))
     (if (eq? env the-empty-environment)
-        (error "unbound variable in lookup" var)
+        (error "unbound variable in lookup")
         (let ((frame (first-frame env)))
           (scan (frame-variables frame)
                 (frame-values frame)))))
@@ -200,23 +191,84 @@
       (cond ((null? vars) (env-loop (enclosing-environment env)))
             ((eq? var (car vars)) (set-car! vals val))
             (else (scan (cdr vars) (cdr vals)))))
-    (if (eq? env the-empty-env)
-        (error "unbound var in set!" var)
+    (if (eq? env the-empty-environment)
+        (error "unbound var in set!")
         (let ((frame (first-frame env)))
           (scan (frame-variables frame)
                 (frame-values frame)))))
   (env-loop env))
 
-(define (define-variable! var val)
+(define (define-variable! var val env)
   (let ((frame (first-frame env)))
     (define (scan vars vals)
       (cond ((null? vars)
-             (add-binding-to-frame! var val))
+             (add-binding-to-frame! var val frame))
             ((eq? var (car vars)) (set-car! vals val))
             (else (scan (cdr vars) (cdr vals)))))
     (scan (frame-variables frame)
           (frame-values frame))))
 
+(define true #t)
+(define false ())
 
+(define (setup-environment)
+  (let ((initial-env
+        (extend-environment (primitive-procedure-names)
+                            (primitive-procedure-objects)
+                            the-empty-environment)))
+    (define-variable! 'true true initial-env)
+    (print 'ok)
+    (define-variable! 'false false initial-env)
+    initial-env))
+
+(define apply-primitive-procedure apply)
+
+(define (primitive-procedure? procedure)
+    (tagged-list? procedure 'procedure))
+(define (primitive-implementation proc) (cadr proc))
+
+(define primitive-procedures
+  (list (list 'car car)
+        (list 'cdr cdr)
+        (list 'cons cons)
+        (list 'null? null?)))
+(define (primitive-procedure-names)
+  (map car primitive-procedures))
+(define (primitive-procedure-objects)
+  (map (lambda (proc) (cons 'procedure (cadr proc)))
+       primitive-procedures))
+
+(define (apply-primitive-procedure proc args)
+  (apply-in-underlying-scheme
+    (primitive-implementation proc) args))
+
+(define input-prompt "mce1> ")
+(define output-prompt "mce1: ")
+(define (driver-loop)
+  (prompt-for-input input-prompt)
+  (let ((input (read)))
+    (print "input" input)
+    (let ((output (leval input the-global-environment)))
+      (announce-output output-prompt)
+      (user-print output)))
+  (driver-loop))
+
+(define (prompt-for-input string)
+  (newline) (newline) (display string) (newline))
+(define (announce-output string)
+  (newline) (display string) (newline))
+
+(define (user-print object)
+    (if (compound-procedure? object)
+        (display (list 'compond-procedure
+                       (procedure-parameters object)
+                       (procedure-body object)
+                       '<procedure-env))
+        (display object)))
+
+(define (newline) (print))
+
+(define the-global-environment (setup-environment))
+(driver-loop)
 
 ;;;; EOF
