@@ -219,10 +219,10 @@
               (t1 (map1 cdr lists))))))
 
 (define (transpose lists)
-    (ftranspose (lambda (x) x) lists))
+  (ftranspose (lambda (x) x) lists))
 
 (define (map f . lists)
-    (ftranspose (lambda (tuple) (apply f tuple)) lists))
+  (ftranspose (lambda (tuple) (apply f tuple)) lists))
 
 ;;; }}}
 ;;; {{{ queue

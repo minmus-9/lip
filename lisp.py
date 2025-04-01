@@ -27,6 +27,7 @@ from lcore import (
     main as lmain,
     Context,
     EL,
+    READING,
     SENTINEL,
     Symbol,
     T,
@@ -783,7 +784,7 @@ def op_range(ctx):
 @glbl("read")
 def op_read(ctx):
     ctx.rcont = ctx.save()
-    ctx.val = EL
+    ctx.val = READING
     ## returning land will cause leval() to return -> callback() returns to
     ## feed() for the next round.
     ##
@@ -853,6 +854,8 @@ def op_type(ctx):
             return ctx.symbol("()")
         if x is T:
             return ctx.symbol("#t")
+        if x is READING:
+            return ctx.symbol("reading")
         if isinstance(x, list):
             return ctx.symbol("pair")
         if isinstance(x, Symbol):

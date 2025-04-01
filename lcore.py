@@ -47,6 +47,7 @@ __all__ = (
     "Context",
     "EL",
     "Parser",
+    "READING",
     "SENTINEL",
     "Symbol",
     "T",
@@ -83,8 +84,9 @@ class error(Exception):
 
 
 EL = object()
-T = True
+READING = object()
 SENTINEL = object()
+T = True
 
 
 class Symbol:
@@ -430,16 +432,16 @@ def create_continuation(ctx):
 
 
 def create_lambda(params, body, env):
-    def lcall(ctx):
-        parent = ctx.env if lcall.special else env
+    def closure(ctx):
+        parent = ctx.env if closure.special else env
         ctx.env = create_environment(ctx, params, ctx.argl, parent)
         ctx.exp = body
         return k_leval
 
-    lcall.special = lcall.ffi = False
-    lcall.lambda_ = params, body  ## for stringify
+    closure.special = closure.ffi = False
+    closure.lambda_ = params, body  ## for stringify
 
-    return lcall
+    return closure
 
 
 def k_stringify_lambda(ctx):
@@ -487,6 +489,8 @@ def k_stringify(ctx):
         ctx.val = "()"
     elif x is T:
         ctx.val = "#t"
+    elif x is READING:
+        ctx.val = "<reading>"
     else:
         ctx.val = "<opaque>"
     return ctx.cont
@@ -1014,7 +1018,7 @@ def main(ctx=None, force_repl=False):
             print("Offender (pyth):", expr)
             print("Offender (lisp):", ctx.stringify(expr), "\n")
             raise
-        if value is not EL:
+        if value not in (EL, READING):
             print(ctx.stringify(value))
 
     stop = True
