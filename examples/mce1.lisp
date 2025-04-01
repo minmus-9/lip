@@ -15,13 +15,20 @@
         ((cond? exp) (leval (cond->if exp) env))
         ((application? exp)
          (lapply (leval (operator exp) env)
-                (list-of-values (operands exp) env)))
+                 (list-of-values (operands exp) env)))
         (else (error "unknown expression type"))))
 
 (define (lapply procedure arguments)
   (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure arguments))
+         (print "PPA"
+                procedure "//"
+                arguments)
+         (apply-primitive-procedure procedure arguments))
         ((compound-procedure? procedure)
+         (print "CPA"
+                (procedure-body procedure) "//"
+                (procedure-parameters procedure) "//"
+                arguments)
          (eval-sequence
            (procedure-body procedure)
            (extend-environment
@@ -43,8 +50,10 @@
 
 (define (eval-sequence exps env)
   (cond ((last-exp? exps)
+         (print "LE")
          (leval (first-exp exps) env))
         (else
+          (print "RE")
           (leval (first-exp exps) env)
           (eval-sequence (rest-exps exps) env))))
 
@@ -64,7 +73,7 @@
   (cond ((integer? exp) true)
         ((float? exp) true)
         ((string? exp) true)
-        (else false)))
+        (else ())))
 
 (define variable? symbol?)
 
@@ -74,7 +83,7 @@
 (define (tagged-list? exp tag)
   (if (pair? exp)
       (eq? (car exp) tag)
-      false))
+      ()))
 
 (define (assignment? exp) (tagged-list? exp 'set!))
 (define (assignment-variable exp) (cadr exp))
@@ -84,19 +93,22 @@
 (define (definition-variable exp)
   (if (symbol? (cadr exp))
       (cadr exp)
-      (caadr exp)))
+      (car (cadr exp))))
 (define (definition-value exp)
   (if (symbol? (cadr exp))
       (caddr exp)
       (make-lambda (cdr (cadr exp))
                    (cddr exp))))
+
 (define (make-lambda parameters body)
   (cons 'lambda (cons parameters body)))
 (define (lambda? lam) (tagged-list? lam 'lambda))
+(define (lambda-parameters lam) (cadr lam))
+(define (lambda-body lam) (cddr lam))
 
 (define (if? exp) (tagged-list? exp 'if))
 (define (if-predicate exp) (cadr exp))
-(define (if-consequenct exp) (caddr exp))
+(define (if-consequent exp) (caddr exp))
 (define (if-alternative exp)
   (if (not (null? (cdddr exp)))
       (cadddr exp)
@@ -152,7 +164,7 @@
   (tagged-list? procedure 'procedure))
 (define (procedure-parameters procedure) (cadr procedure))
 (define (procedure-body procedure) (caddr procedure))
-(define (procedure-environment procdure) (cadddr procedure))
+(define (procedure-environment procedure) (cadddr procedure))
 
 (define (enclosing-environment env) (cdr env))
 (define (first-frame env) (car env))
@@ -217,30 +229,35 @@
                             (primitive-procedure-objects)
                             the-empty-environment)))
     (define-variable! 'true true initial-env)
-    (print 'ok)
     (define-variable! 'false false initial-env)
     initial-env))
 
-(define apply-primitive-procedure apply)
-
 (define (primitive-procedure? procedure)
-    (tagged-list? procedure 'procedure))
-(define (primitive-implementation proc) (cadr proc))
+    (tagged-list? procedure 'primitive))
+(define (primitive-implementation proc) (cdr proc))
 
 (define primitive-procedures
   (list (list 'car car)
         (list 'cdr cdr)
         (list 'cons cons)
-        (list 'null? null?)))
+        (list 'null? null?)
+        (list 'print print)
+        (list '+ +)
+  ))
 (define (primitive-procedure-names)
   (map car primitive-procedures))
 (define (primitive-procedure-objects)
-  (map (lambda (proc) (cons 'procedure (cadr proc)))
+  (map (lambda (proc) (cons 'primitive (cadr proc)))
        primitive-procedures))
 
 (define (apply-primitive-procedure proc args)
+  (print "APP" proc "//" args "//" (primitive-implementation proc))
   (apply-in-underlying-scheme
     (primitive-implementation proc) args))
+
+(define (apply-in-underlying-scheme proc args)
+  (print "AIUS" proc "//" args)
+  (apply proc args))
 
 (define input-prompt "mce1> ")
 (define output-prompt "mce1: ")
@@ -254,16 +271,16 @@
   (driver-loop))
 
 (define (prompt-for-input string)
-  (newline) (newline) (display string) (newline))
-(define (announce-output string)
   (newline) (display string) (newline))
+(define (announce-output string)
+  (display string) (newline))
 
 (define (user-print object)
     (if (compound-procedure? object)
         (display (list 'compond-procedure
                        (procedure-parameters object)
                        (procedure-body object)
-                       '<procedure-env))
+                       '<procedure-env>))
         (display object)))
 
 (define (newline) (print))
