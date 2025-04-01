@@ -20,15 +20,8 @@
 
 (define (lapply procedure arguments)
   (cond ((primitive-procedure? procedure)
-         (print "PPA"
-                procedure "//"
-                arguments)
          (apply-primitive-procedure procedure arguments))
         ((compound-procedure? procedure)
-         (print "CPA"
-                (procedure-body procedure) "//"
-                (procedure-parameters procedure) "//"
-                arguments)
          (eval-sequence
            (procedure-body procedure)
            (extend-environment
@@ -50,10 +43,8 @@
 
 (define (eval-sequence exps env)
   (cond ((last-exp? exps)
-         (print "LE")
          (leval (first-exp exps) env))
         (else
-          (print "RE")
           (leval (first-exp exps) env)
           (eval-sequence (rest-exps exps) env))))
 
@@ -251,12 +242,10 @@
        primitive-procedures))
 
 (define (apply-primitive-procedure proc args)
-  (print "APP" proc "//" args "//" (primitive-implementation proc))
   (apply-in-underlying-scheme
     (primitive-implementation proc) args))
 
 (define (apply-in-underlying-scheme proc args)
-  (print "AIUS" proc "//" args)
   (apply proc args))
 
 (define input-prompt "mce1> ")
