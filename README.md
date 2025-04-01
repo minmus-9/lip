@@ -87,6 +87,7 @@ macro system in this LISP, just quasiquote.
 |`(pair? x)`|return `#t` if x is a pair, else `()`|
 |`(print ...)`|print a list of objects space-separated followed by a newline|
 |`(range start stop step)`|same as the python function but return a list|
+|`(read)`|read an expression from input|
 |`(set-car! pair value)`|set the car of a pair|
 |`(set-cdr! pair value)`|set the cdr of a pair|
 |`(- n1 n2)`|return `n1 - n2`|
