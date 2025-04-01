@@ -272,8 +272,8 @@
 (define (apply-in-underlying-scheme proc args)
   (apply proc args))
 
-(define input-prompt "mce1> ")
-(define output-prompt "mce1: ")
+(define input-prompt "mce2> ")
+(define output-prompt "mce2: ")
 (define (driver-loop)
   (prompt-for-input input-prompt)
   (let ((input (read)))
