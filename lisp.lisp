@@ -374,6 +374,13 @@
 ;;; }}}
 ;;; {{{ associative table
 
+(define (assoc key table)
+    (if (null? table)
+        ()
+        (if (equal? (caar table) key)
+            (car table)
+            (assoc key (cdr table)))))
+
 (define (table compare)
   (define items ())
   (define (table$find items key compare)
@@ -384,14 +391,14 @@
             (car items))))
   (define (table$delete items key compare)
     (define prev ())
-    (define (helper assoc)
-      (if (null? assoc)
+    (define (helper pairs)
+      (if (null? pairs)
           items
-          (if (compare (car (car assoc)) key)
-              (begin (set! prev assoc) (helper (cdr assoc)))
+          (if (compare (car (car pairs)) key)
+              (begin (set! prev pairs) (helper (cdr pairs)))
               (if (null? prev)
-                  (cdr assoc)
-                  (begin (set-cdr! prev (cdr assoc)) items)))))
+                  (cdr pairs)
+                  (begin (set-cdr! prev (cdr pairs)) items)))))
     (helper items))
   (define (dispatch m . args)
     (cond ((eq? m 'get) (table$find items (car args) compare))
