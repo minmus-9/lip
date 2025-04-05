@@ -204,7 +204,7 @@
           (lambda ()
             (set-contents! flag (condition-proc))
             (advance-pc pc)))
-        (error "Bad TEST instruction")
+        (error "Bad test instruction"))))
 
 (define (test-condition test-instruction)
   (cdr test-instruction))
@@ -238,7 +238,7 @@
                        (register-exp-reg dest))))
              (lambda ()
                (set-contents! pc (get-contents reg)))))
-          (else (error "Bad GOTO instruction: ASSEMBLE" inst)))))
+          (else (error "bad goto instruction")))))
 
 (define (goto-dest goto-instruction)
   (cadr goto-instruction))
@@ -328,15 +328,19 @@
 (define gcd-machine
   (make-machine
     '(a b t)
-    (list (list 'rem remainder) (list '= =))
+    (list (list 'rem mod) (list '= =))
     '(test-b (test (op =) (reg b) (const 0))
              (branch (label gcd-done))
              (assign t (op rem) (reg a) (reg b))
              (assign a (reg b))
              (assign b (reg t))
              (goto (label test-b))
-             gcd-done)))
+      gcd-done)))
 
+(set-register-contents! gcd-machine 'a 206)
+(set-register-contents! gcd-machine 'b 40)
+(start gcd-machine)
+(get-register-contents gcd-machine 'a)
 
 
 ;;;; EOF
