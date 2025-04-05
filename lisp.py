@@ -673,7 +673,12 @@ def op_equal_f(x, y):
 
 @glbl("error")
 def op_error(ctx):
-    raise error(ctx.unpack1())
+    args = ctx.argl
+    if args is EL:
+        raise error("*** unspecified error ***")
+    if args[1] is EL:
+        raise error(args[0])
+    raise error(args)
 
 
 @glbl("eval")
