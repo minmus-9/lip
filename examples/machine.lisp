@@ -1,6 +1,31 @@
 ;;;; sicp chapter 5 register machine
 
+;;; (assign <register-name> (reg <register-name>))
+;;; (assign <register-name> (const <constant-value>))
+;;; (assign <register-name>
+;;;         (op <operation-name>)
+;;;         <input1 > . . . <inputn >)
+;;; (assign <register-name> (label <label-name>))
+;;;
+;;; (perform (op <operation-name>) <input1 > . . . <inputn >)
+;;;
+;;; (test (op <operation-name>) <input1 > . . . <inputn >)
+;;; (branch (label <label-name>))
+;;;
+;;; (goto (label <label-name>))
+;;; (goto (reg <register-name>))
+;;;
+;;; (save <register-name>)
+;;; (restore <register-name>)
+;;;
+;;; (const 11)
+;;; (const "abc")
+;;; (const abc)
+;;; (const (a b c))
+;;; (const ())
+
 (define append join)
+
 (define (tagged-list? exp tag)
   (if (pair? exp)
       (eq? (car exp) tag)
@@ -19,10 +44,15 @@
 
 (define (make-register name)
   (let ((contents '*unassigned*))
+    (define (getter)
+      (if (eq? contents '*unsasigned*)
+          (error "reg uninitialized")
+          contents))
+    (define (setter value)
+      (set! contents value))
     (define (dispatch message)
-      (cond ((eq? message 'get) contents)
-            ((eq? message 'set)
-             (lambda (value) (set! contents value)))
+      (cond ((eq? message 'get) (getter))
+            ((eq? message 'set) setter)
             (else (error "unknown message"))))
     dispatch))
 
@@ -102,7 +132,6 @@
 
 (define (get-register machine reg-name)
   ((machine 'get-register) reg-name))
-
 
 (define (assemble controller-text machine)
   (extract-labels
@@ -334,7 +363,8 @@
   (make-machine
     '(a b t)
     (list (list 'rem mod) (list '= =))
-    '(test-b (test (op =) (reg b) (const 0))
+    '(       (perform (op initialize-stack))
+      test-b (test (op =) (reg b) (const 0))
              (branch (label gcd-done))
              (assign t (op rem) (reg a) (reg b))
              (assign a (reg b))
