@@ -1,10 +1,16 @@
 ;;;; sicp chapter 5 register machine
 
+(define append join)
+(define (tagged-list? exp tag)
+  (if (pair? exp)
+      (eq? (car exp) tag)
+      ()))
+
 (define (make-machine register-names ops controller-text)
   (let ((machine (make-new-machine)))
     (foreach
       (lambda (register-name)
-        (machine 'allocate-register register-name))
+        ((machine 'allocate-register) register-name))
       register-names)
     ((machine 'install-operations) ops)
     ((machine 'install-instruction-sequence)
@@ -52,12 +58,11 @@
     (let ((the-ops
             (list (list 'initialize-stack
                         (lambda () (stack 'initialize)))))
-          (register-table (list (list 'pc pc) (list 'flag flag))))
+          (register-table (list (cons 'pc pc) (cons 'flag flag))))
       (define (allocate-register name)
         (if (assoc name register-table)
             (error "dup reg name")
-            (set! register-table (cons (list name (make-register name))
-                                       register-table)))
+            (set! register-table (cons (cons name (make-register name)) register-table)))
         'register-allocated)
       (define (lookup-register name)
         (let ((val (assoc name register-table)))
@@ -82,7 +87,7 @@
               ((eq? message 'install-operations)
                (lambda (ops) (set! the-ops (append the-ops ops))))
               ((eq? message 'stack) stack)
-              ((eq? message 'operations ops))
+              ((eq? message 'operations) the-ops)
               (else (error "unknown machine op"))))
       dispatch)))
 
@@ -129,7 +134,7 @@
         (ops (machine 'operations)))
     (foreach
       (lambda (inst)
-        (set-instruction-execute-proc!
+        (set-instruction-execution-proc!
           inst
           (make-execution-procedure
             (instruction-text inst)
@@ -341,6 +346,5 @@
 (set-register-contents! gcd-machine 'b 40)
 (start gcd-machine)
 (get-register-contents gcd-machine 'a)
-
 
 ;;;; EOF

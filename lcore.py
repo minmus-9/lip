@@ -313,9 +313,13 @@ class Context:
             raise
 
     def stringify(self, x):
+        state = self.save() ## so you can call .stringify() from cps code
         self.cont = self.land
         self.exp = x
-        return self.trampoline(k_stringify)
+        try:
+            return self.trampoline(k_stringify)
+        finally:
+            self.restore(state)
 
     ## stack
 
