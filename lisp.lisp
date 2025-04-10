@@ -557,21 +557,5 @@
 (define (string? x) (eq? (type x) 'string))
 
 ;;; }}}
-(special (do . things) (eval (do$ things) 1))
-
-(define (do$ things)
-    (if (null? things)
-        ()
-        (if (null? (cdr things))
-            (car things)
-            (if (eval (car things) 1)
-                (do$ (cdr things))
-                (do$ (cdr things))))))
-
-(define (x)
-  (begin
-    1
-    (x)))
-(x)
 
 ;;; EOF

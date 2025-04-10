@@ -130,7 +130,7 @@ class Context:
             ",": self.symbol("unquote"),
             ",@": self.symbol("unquote-splicing"),
         }
-        self.last = EL
+        parse(self, RUNTIME, self.leval)
 
     def restore(self, x):
         (
@@ -635,6 +635,55 @@ def binary(ctx, f):
     return ctx.cont
 
 
+@special("begin")
+def op_begin(ctx):
+    args = ctx.argl
+    if args is EL:
+        ctx.val = EL
+        return ctx.cont
+    try:
+        ctx.exp, args = args
+    except TypeError:
+        raise SyntaxError("expected list") from None
+    if args is not EL:
+        ctx.s = [args, [ctx.env, [ctx.cont, ctx.s]]]
+        ctx.cont = op_begin_next
+    ## if args is EL, we merely burned up a jump
+    return k_leval
+
+
+def op_begin_next(ctx):
+    args, s = ctx.s
+    try:
+        ctx.exp, args = args
+    except TypeError:
+        raise SyntaxError("expected list") from None
+    if args is EL:
+        ## i didn't understand this until watching top(1) run as
+        ## my tail-recursive code chewed up ram
+        ##
+        ## i *thought* begin wanted to be a special form because
+        ## the order of arg evaluation is up to the implementation.
+        ## since lcore explicitly evaluates args left to right, i
+        ## figured it didn't really matter. but no, not even close.
+        ##
+        ## THIS is why it's important that begin/do be a special
+        ## form: the stack is now unwound as we evaluate the
+        ## last arg so we get a tail call opporuntity. if you
+        ## do the moral equivalent of
+        ##          (define (begin . args) (last args))
+        ## it'll work fine, but you don't get tco, just recursion.
+        ##
+        ## which you can see with top(1) :D
+        ctx.env, s = s
+        ctx.cont, ctx.s = s
+    else:
+        ctx.env = s[0]
+        ctx.s = [args, s]
+        ctx.cont = op_begin_next
+    return k_leval
+
+
 @special("define")
 def op_define(ctx):
     try:
@@ -822,7 +871,7 @@ def k_op_trap(ctx):
     ctx.env, s = s
     ctx.cont, ctx.s = s
     state = ctx.save()  ## ... ok, we're good to go
-    ctx.s = [ctx.env, [ctx.cont, ctx.s]]  ## ops, need these back!
+    ctx.s = [ctx.env, [ctx.cont, ctx.s]]  ## oops, we need these back (but not saved)
     try:
         res = ctx.leval(expr, ctx.env)
     except Exception as e:  ## pylint: disable=broad-except
@@ -834,7 +883,7 @@ def k_op_trap(ctx):
         ## no exception occurred, proceed
         ctx.env, s = ctx.s
         ctx.cont, ctx.s = s
-        ctx.val = res  ## restored... *now* set val
+        ctx.val = res
         return ctx.cont
 
 
@@ -939,6 +988,20 @@ def op_apply(ctx):
     return proc
 
 
+@primitive("atom>string")
+def op_stringify_atom(ctx):
+    x = ctx.unpack1()
+    if x.__class__ is list:
+        raise SyntaxError("expected atom, got list")
+    try:
+        _ = x.__call__
+        raise SyntaxError("expected atom, got callable")
+    except AttributeError:
+        pass
+    ctx.val = str(x)
+    return ctx.cont
+
+
 @primitive("car")
 def op_car(ctx):
     return unary(ctx, lambda x: listcheck(x)[0])
@@ -958,15 +1021,21 @@ def op_cons(ctx):
 def op_display(ctx):
     x = ctx.unpack1()
 
+    if x.__class__ is list:
+        raise TypeError("display only works with atoms")
+    try:
+        _ = x.__call__
+        raise TypeError("display only works with atoms")
+    except AttributeError:
+        pass
     if x is EL:
         x = "()"
     elif x is T:
         x = "#t"
-    elif x.__class__ is list:
-        raise TypeError("display only works with atoms")
     else:
         x = str(x)
     print(x, end="")
+    return ctx.cont
 
 
 @primitive("/")
@@ -1029,8 +1098,8 @@ def op_eval(ctx):
 @primitive("exit")
 def op_exit(ctx):
     x = ctx.unpack1()
-    if x.__class__ is not int:
-        raise TypeError("expected int")
+    if x.__class__ not in (int, str):
+        raise TypeError("expected int or str")
     raise SystemExit(x)
 
 
@@ -1055,17 +1124,15 @@ def op_nand_f(x, y):
     return ~(x & y)
 
 
-@primitive("atom>string")
-def op_stringify_atom(ctx):
-    x = ctx.unpack1()
-    if x.__class__ is list:
-        raise SyntaxError("expected atom, got list")
-    try:
-        _ = x.__call__
-        raise SyntaxError("expected atom, got callable")
-    except AttributeError:
-        pass
-    ctx.val = str(x)
+@primitive("printenv")
+def op_printenv(ctx):
+    if ctx.argl is not EL:
+        raise TypeError("printenv takes no args")
+    print("env:")
+    for k, v in ctx.env.items():
+        if k is not SENTINEL:
+            print("  ", k, v)
+    print()
     return ctx.cont
 
 
@@ -1152,6 +1219,358 @@ def op_type(ctx):
         return ctx.symbol("opaque")
 
     return unary(ctx, f)
+
+
+RUNTIME = """
+(define (null? x) (if x () #t))
+(define not null?)
+(define (true? x) (if x #t ()))
+
+(define (pair? x) (eq? (type x) 'pair))
+(define (symbol? x) (eq? (type x) 'symbol))
+(define (integer? x) (eq? (type x) 'integer))
+(define (float? x) (eq? (type x) 'float))
+(define (string? x) (eq? (type x) 'string))
+(define (lambda? x) (eq? (type x) 'lambda))
+(define (primitive? x) (eq? (type x) 'primitive))
+(define (opaque? x) (eq? (type x) 'opaque))
+
+(define (newline) (display "\n"))
+
+(define (+ x y) (- x (- y)))
+(define (abs x) (if (< x 0) (- x) x))
+
+(define (unquote x) (error "cannot unquote here"))
+(define (unquote-splicing x) (error "cannot unquote-splicing here"))
+
+(define (caar l) (car (car l)))
+(define (caaar l) (car (caar l)))
+(define (caaaar l) (caar (caar l)))
+
+(define (cddr l) (cdr (cdr l)))
+(define (cdddr l) (cdr (cddr l)))
+(define (cddddr l) (cddr (cddr l)))
+
+(define (cadr l) (car (cdr l)))
+(define (caddr l) (car (cddr l)))
+(define (cadddr l) (car (cdddr l)))
+(define (caddddr l) (car (cddddr l)))
+
+(special (cond . __special_cond_cases__)
+    (eval (cond$ __special_cond_cases__) 1))
+
+(define (cond$ cases)
+  (if (null? cases)
+      ()
+      (begin
+        (define pc (car cases))
+        (define p (car pc))
+        (define c (cdr pc))
+        (set! c
+          (if (null? (cdr c))
+              (car c)
+              (cons 'begin c)))
+       `(if ,p ,c ,(cond$ (cdr cases))))))
+
+(define else #t)
+
+(define (list . args) args)
+
+(special (or . exprs)
+    (if (null? exprs)
+        ()
+        (eval (or$ (car exprs) (cdr exprs)) 1)))
+
+(define (or$ expr rest)
+  (if (null? rest)
+      expr
+      `(if ,expr #t ,(or$ (car rest) (cdr rest)))))
+
+(special (and . exprs)
+  (if (null? exprs)
+      ()
+      (eval (and$ (car exprs) (cdr exprs)) 1)))
+
+(define (and$ expr rest)
+  (if (null? rest)
+      expr
+      `(if ,expr ,(and$ (car rest) (cdr rest)))))
+
+(define (~ x)   (nand x x))
+(define (& x y) (~ (nand x y)))
+(define (| x y) (nand (~ x) (~ y)))
+(define (^ x y) (& (nand x y) (| x y)))
+
+(define (mod n d) (- n (* d (/ n d))))
+
+(define (lshift x n)
+  (if (equal? n 0)
+      x
+      (lshift (+ x x) (- n 1))))
+
+(define (rshift x n)
+  (if (equal? n 0)
+      x
+      (rshift (/ x 2) (- n 1))))
+
+(define (>= x y) (if (< x y) () #t))
+(define (>  x y) (< y x))
+(define (<= x y) (if (< y x) () #t))
+
+(define (reverse l)
+  (define (rev x y)
+    (if (null? x)
+        y
+        (rev (cdr x) (cons (car x) y))))
+  (rev l ()))
+
+(define (length lst)
+  (define (iter l i)
+    (if (null? l)
+        i
+        (iter (cdr l) (- i -1))))
+  (iter lst 0))
+
+(define (map1 f lst)  ; not elegant like sicp -- but faster in this lisp
+  (define ret ())     ; head of queue and return value
+  (define tail ())    ; tail of queue
+  (define (map1$ lst)
+    (if (null? lst)
+        ret
+        (begin
+          ;; link in the new value
+          (set-cdr! tail (cons (f (car lst)) ()))
+          (set! tail (cdr tail))
+          ;; rinse, repeat
+          (map1$ (cdr lst)))))
+    (if (null? lst)
+        ()
+        (begin
+          ;; enqueue the first item here to avoid main loop test
+          (set! ret (cons (f (car lst)) ()))
+          (set! tail ret)
+          (map1$ (cdr lst)))))
+
+;; map 2 funcs over a lst of 2-lists (x y); for example, a list of (let) vdefs
+;; returns
+;;      (cons (map1 car lst) (map1 cadr lst))
+;; but faster
+(define (map-2-list fcar fcdr lst)
+  (define rcar ())
+  (define tcar ())
+  (define rcdr ())
+  (define tcdr ())
+  (define (map2$ lst)
+    (if (null? lst)
+        (cons rcar rcdr)
+        (begin
+          (define xy (car lst))
+          ;; link in the new values
+          (set-cdr! tcar (cons (fcar xy) ()))
+          (set! tcar (cdr tcar))
+          (set-cdr! tcdr (cons (fcdr xy) ()))
+          (set! tcdr (cdr tcdr))
+          ;; rinse, repeat
+          (map2$ (cdr lst)))))
+    (if (null? lst)
+        ()
+        (begin
+          ;; enqueue the first item here to avoid main loop test
+          (define xy (car lst))
+          (set! rcar (cons (fcar xy) ()))
+          (set! tcar rcar)
+          (set! rcdr (cons (fcdr xy) ()))
+          (set! tcdr rcdr)
+          (map2$ (cdr lst)))))
+
+(define (ftranspose f lists)
+  (define ret ())  ;; head of queue and return value
+  (define tail ())  ;; tail of queue
+  (define (t1 lists)
+    (if (null? (car lists))
+        ret
+        (begin
+          ;; link in the new value
+          (set-cdr! tail (cons (f (map1 car lists)) ()))
+          (set! tail (cdr tail))
+          ;; rinse, repeat
+          (t1 (map1 cdr lists)))))
+    (if (null? lists)
+        ()
+        (if
+            (null? (car lists))
+            ()
+            (begin
+              ;; enqueue the first item here to avoid main loop test
+              (set! ret (cons (f (map1 car lists)) ()))
+              (set! tail ret)
+              (t1 (map1 cdr lists))))))
+
+(define (transpose lists)
+  (ftranspose (lambda (x) x) lists))
+
+(define (map f . lists)
+  (ftranspose (lambda (tuple) (apply f tuple)) lists))
+
+(define (queue)
+  (define head ())
+  (define tail ())
+  (define node ())
+  (define (enqueue x)
+    (set! node (cons x ()))
+    (if (null? head)
+        (set! head node)
+        (set-cdr! tail node))
+    (set! tail node))
+  (define (e lst)
+    (if (null? lst)
+        ()
+        (begin
+          (set-cdr! tail (cons (car lst) ()))
+          (set! tail (cdr tail))
+          (e (cdr lst)))))
+  (define (extend lst)
+    (if (null? lst)
+        ()
+        (begin
+          (enqueue (car lst))
+          (e (cdr lst)))))
+  (define (dequeue)
+    (define n head)
+    (set! head (cdr n))
+    (if (null? head)
+        (set! tail ())
+        ())
+    (car n))
+  (define (append x)
+    (if (null? head)
+        (extend x)
+        (if (pair? x)
+            (set-cdr! tail x)
+            (if (null? x) () (error "can only append list")))))
+  (define (dispatch m)
+    (cond ((eq? m 'extend)  extend)
+          ((eq? m 'enqueue) enqueue)
+          ((eq? m 'dequeue) dequeue)
+          ((eq? m 'get)     head)
+          ((eq? m 'depth)   (length head))
+          ((eq? m 'append)  append)
+          ((eq? m 'last) (car tail))))
+  dispatch)
+
+(define (join x . lists)
+  (define q (queue))
+  (define append (q 'append))
+  (define extend (q 'extend))
+  (define (j x lists)
+    (if (null? lists)
+        (begin
+          (append x)
+          (q 'get))
+        (begin
+          (extend x)
+          (j (car lists) (cdr lists)))))
+  (if (null? lists) x (j x lists))
+)
+
+(special (let __special_let_vdefs__ . __special_let_body__)
+    (eval (let$ __special_let_vdefs__ __special_let_body__) 1))
+
+(define (let$ vdefs body)
+  (if (eq? (type vdefs) 'symbol)
+      (let$3 vdefs (car body) (cdr body))
+      (let$2 vdefs body)))
+
+(define (let$2 vdefs body)
+  (define xy (map-2-list car cadr vdefs))
+  `((lambda (,@(car xy)) ,@body) ,@(cdr xy)))
+
+(define (let$3 sym vdefs body)
+  (define xy (map-2-list car cadr vdefs))
+  `(begin
+     (define (,sym ,@(car xy)) ,@body)
+     (,sym ,@(cdr xy))))
+
+(special (let* __special_lets_vdefs__ . __special_lets_body__)
+    (eval (let*$ __special_lets_vdefs__ __special_lets_body__) 1))
+
+(define (let*$ vdefs body)
+  (if (eq? (type vdefs) 'symbol)
+      (let*$3 vdefs (car body) (cdr body))
+      (let*$2 vdefs body)))
+
+(define (let*$2 vdefs body)
+  (if (null? vdefs)
+      (if (null? (cdr body)) (car body) (cons 'begin body))
+      (begin
+        (define kv (car vdefs))
+        `((lambda (,(car kv)) ,(let*$2 (cdr vdefs) body)) ,(cadr kv)))))
+
+(define (let*$3 sym vdefs body)
+  (define (inner vdefs)
+    (if (null? vdefs)
+        (if (null? (cdr body)) (car body) (cons 'begin body))
+        `((lambda (,(caar vdefs)) ,(inner (cdr vdefs))) ,(caar vdefs))))
+    `((lambda ()
+       (define (,sym ,@(map1 car vdefs)) ,(inner vdefs))
+       (,sym ,@(map1 cadr vdefs)))))
+
+(special (letrec __special_letrec_vdefs__ . __special_letrec_body__)
+    (eval (letrec$ __special_letrec_vdefs__ __special_letrec_body__) 1))
+
+(define (letrec$ vdefs body)
+  (if (eq? (type vdefs) 'symbol)
+      (letrec$3 vdefs (car body) (cdr body))
+      (letrec$2 vdefs body)))
+
+(define (letrec$2 vdefs body)
+  `((lambda ()
+      ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
+      ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
+      ,@body)))
+
+(define (letrec$3 sym vdefs body)
+  `((lambda ()
+      ,@(map1 (lambda (x) `(define ,(car x) ())) vdefs)
+      ,@(map1 (lambda (x) `(set! ,(car x) ,(cadr x))) vdefs)
+      (define (,sym ,@(map1 car vdefs)) ,@body)
+      (,sym ,@(map1 cadr vdefs)))))
+
+;; call f in a loop forever
+(define (loop f) (f) (loop f))
+
+(define (while f) (if (f) (while f) ()))
+
+(define (for f start stop step)
+  (define op <)
+  (define (for$ start)
+    (if (op start stop)
+        (begin
+          (f start)
+          (for$ (- start (- step))))))
+    (cond
+        ((< 0 step)
+          (if (< stop start)
+              (error "bad step")))
+        ((< step 0)
+          (if (< start stop)
+              (error "bad step")
+              (set! op >)))
+        (#t (error "step must be nonzero")))
+  (for$ start))
+
+(define (foreach f lst)
+  (define (loop f _ lst)
+    (if (null? lst)
+        ()
+        (loop f (f (car lst)) (cdr lst))))
+  (loop f () lst))
+
+(special (no-op . args) ())  ;; replace no-op with begin to execute args
+
+(define = equal?)
+(define mapcar map1)
+"""
 
 
 if __name__ == "__main__":
