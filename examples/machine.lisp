@@ -2,14 +2,12 @@
 
 ;;; (assign <register-name> (reg <register-name>))
 ;;; (assign <register-name> (const <constant-value>))
-;;; (assign <register-name>
-;;;         (op <operation-name>)
-;;;         <input1 > . . . <inputn >)
 ;;; (assign <register-name> (label <label-name>))
+;;; (assign <register-name> (op <operation-name>) <input1> . . . <inputn>)
 ;;;
-;;; (perform (op <operation-name>) <input1 > . . . <inputn >)
+;;; (perform (op <operation-name>) <input1> . . . <inputn>)
 ;;;
-;;; (test (op <operation-name>) <input1 > . . . <inputn >)
+;;; (test (op <operation-name>) <input1> . . . <inputn>)
 ;;; (branch (label <label-name>))
 ;;;
 ;;; (goto (label <label-name>))
@@ -372,7 +370,7 @@
              (goto (label test-b))
       gcd-done)))
 
-(set-register-contents! gcd-machine 'a 206)
+(set-register-contents! gcd-machine 'a 256)
 (set-register-contents! gcd-machine 'b 40)
 (start gcd-machine)
 (get-register-contents gcd-machine 'a)

@@ -313,7 +313,7 @@ class Context:
             raise
 
     def stringify(self, x):
-        state = self.save() ## so you can call .stringify() from cps code
+        state = self.save() ## so you can call .stringify() from a trampoline
         self.cont = self.land
         self.exp = x
         try:
