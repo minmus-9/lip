@@ -63,7 +63,7 @@ def listcheck(x):
 
 
 def make_environment(ctx, params, args, parent):
-    e = { SENTINEL: parent }
+    e = {SENTINEL: parent}
     dot = ctx.symbol(".")
     variadic = False
     try:
@@ -369,7 +369,7 @@ class Parser:
     def __init__(self, ctx, callback):
         self.ctx = ctx
         self.callback = callback
-        self.qt = ctx.quotes    ## quotes and replacements
+        self.qt = ctx.quotes  ## quotes and replacements
         self.pos = [0]  ## yup, a list, see feed() and S_COMMA code
         self.token = []
         self.add = self.token.append
@@ -635,55 +635,6 @@ def binary(ctx, f):
     return ctx.cont
 
 
-@special("begin")
-def op_begin(ctx):
-    args = ctx.argl
-    if args is EL:
-        ctx.val = EL
-        return ctx.cont
-    try:
-        ctx.exp, args = args
-    except TypeError:
-        raise SyntaxError("expected list") from None
-    if args is not EL:
-        ctx.s = [args, [ctx.env, [ctx.cont, ctx.s]]]
-        ctx.cont = op_begin_next
-    ## if args is EL, we merely burned up a jump
-    return k_leval
-
-
-def op_begin_next(ctx):
-    args, s = ctx.s
-    try:
-        ctx.exp, args = args
-    except TypeError:
-        raise SyntaxError("expected list") from None
-    if args is EL:
-        ## i didn't understand this until watching top(1) run as
-        ## my tail-recursive code chewed up ram
-        ##
-        ## i *thought* begin wanted to be a special form because
-        ## the order of arg evaluation is up to the implementation.
-        ## since lcore explicitly evaluates args left to right, i
-        ## figured it didn't really matter. but no, not even close.
-        ##
-        ## THIS is why it's important that begin/do be a special
-        ## form: the stack is now unwound as we evaluate the
-        ## last arg so we get a tail call opporuntity. if you
-        ## do the moral equivalent of
-        ##          (define (begin . args) (last args))
-        ## it'll work fine, but you don't get tco, just recursion.
-        ##
-        ## which you can see with top(1) :D
-        ctx.env, s = s
-        ctx.cont, ctx.s = s
-    else:
-        ctx.env = s[0]
-        ctx.s = [args, s]
-        ctx.cont = op_begin_next
-    return k_leval
-
-
 @special("define")
 def op_define(ctx):
     try:
@@ -871,7 +822,10 @@ def k_op_trap(ctx):
     ctx.env, s = s
     ctx.cont, ctx.s = s
     state = ctx.save()  ## ... ok, we're good to go
-    ctx.s = [ctx.env, [ctx.cont, ctx.s]]  ## oops, we need these back (but not saved)
+    ctx.s = [  ## oops, we need these back (but not saved)
+        ctx.env,
+        [ctx.cont, ctx.s],
+    ]
     try:
         res = ctx.leval(expr, ctx.env)
     except Exception as e:  ## pylint: disable=broad-except
@@ -1124,18 +1078,6 @@ def op_nand_f(x, y):
     return ~(x & y)
 
 
-@primitive("printenv")
-def op_printenv(ctx):
-    if ctx.argl is not EL:
-        raise TypeError("printenv takes no args")
-    print("env:")
-    for k, v in ctx.env.items():
-        if k is not SENTINEL:
-            print("  ", k, v)
-    print()
-    return ctx.cont
-
-
 @primitive("set-car!")
 def op_setcar(ctx):
     return binary(ctx, op_set_car_f)
@@ -1194,6 +1136,13 @@ def op_sub(ctx):
     return ctx.cont
 
 
+@primitive("time")
+def op_time(ctx):
+    import time  ## pylint: disable=import-outside-toplevel
+    ctx.val = time.time()
+    return ctx.cont
+
+
 @primitive("type")
 def op_type(ctx):
     def f(x):
@@ -1221,12 +1170,13 @@ def op_type(ctx):
     return unary(ctx, f)
 
 
-RUNTIME = """
+RUNTIME = r"""
 (define (null? x) (if x () #t))
 (define not null?)
 (define (true? x) (if x #t ()))
 
 (define (pair? x) (eq? (type x) 'pair))
+(define (atom? x) (not (pair? x)))
 (define (symbol? x) (eq? (type x) 'symbol))
 (define (integer? x) (eq? (type x) 'integer))
 (define (float? x) (eq? (type x) 'float))
@@ -1570,6 +1520,51 @@ RUNTIME = """
 
 (define = equal?)
 (define mapcar map1)
+
+(special (begin . exprs)
+    (if (null? exprs)
+        ()
+        (eval (begin$ (car exprs) (cdr exprs)) 1)))
+
+(define (begin$ expr rest)
+  (if (null? rest)
+      expr
+      `(if (if ,expr () ()) () ,(begin$ (car rest) (cdr rest)))))
+
+(define (print . args)
+  (if (null? args)
+      (display "\n")
+      (begin
+        (print$x (car args))
+        (apply print (cdr args)))))
+
+(define (print$x x)
+  (if (pair? x)
+      (print$list x)
+      (display x)))
+
+(define (print$list lst)
+  (display "(")
+  (let loop ((item (car lst)) (rest (cdr lst)))
+    (print$x item)
+    (if (not (null? rest))
+        (begin
+          (display " ")
+          (loop (car rest) (cdr rest)))))
+  (display ")"))
+
+(define (timeit f n)
+  (define (loop i)
+    (if (< i n) (begin (f i) (loop (- i -1))) ()))
+  (define t0 (time))
+  (loop 0)
+  (define t1 (time))
+  (define dt (- t1 t0))
+  (if (< dt 1e-7) (set! dt 1e-7) ())
+  (if (< n 1) (set! n 1) ())
+  (list n dt (* 1e6 (/ dt n)) (/ n dt)))
+
+(print (timeit (lambda (_) ()) 10000))
 """
 
 

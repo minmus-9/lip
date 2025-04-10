@@ -91,6 +91,8 @@
 (timeit (lambda (_) (print (ltak 12l 6l 2l))) 1)
 (timeit (lambda (_) (print (ltak 18l 12l 6l))) 1)
 
+(print 'OK)
+
 ;; from https://www.dreamsongs.com/Files/Timrep.pdf
 
 (define (takf x y z) (takfsub takfsub x y z))
